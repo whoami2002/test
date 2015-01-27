@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+ 
+ http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ -->
+<html>
+    <head>
+        
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/setting.css" />
+        <link rel="stylesheet" type="text/css" href="css/layout.css" />
+        <title>Hello World</title>
+    </head>
+    <body>
+        <div >
+            <div class='status_bar'></div>
+            <div class='nav_bar'><div class='nav_left' > <img class="left_icon" src='img/arrow-left-72.png' onclick="back()"></div><div class='nav_title'>Setting</div><div class='nav_right'></div></div></div>
+        
+        
+        <!------------content area---------------->
+        <div id='view' class='view' >
+            <div class='header'><div class='header_content'>Profile</div ></div>
+            <div style='background-color:#ffffff;'>
+                <div class='item_cell' onclick='edit_info()'>Username<div class='next_arrow'></div></div>
+                <div class='item_cell item_indent' onclick='edit_info()'>Profile picture<div class='next_arrow'></div></div>
+            </div>
+            
+            <div class='header'><div class='header_content'>Account setting</div ></div>
+            <div style='background-color:#ffffff;'>
+                <div class='item_cell' onclick='check_fb_permission()'>Facebook<div class='next_arrow'></div><div class="social_name" id='fb_name'></div></div>
+                <div class='item_cell item_indent' onclick='Twitter_getPerrmission()'>Twitter<div class='next_arrow'></div></div>
+                <!--
+                 <div class='item_cell item_indent'>Instagram<div class='next_arrow'></div></div>
+
+                <div class='item_cell item_indent'>Tumblr<div class='next_arrow'></div></div>
+                <div class='item_cell item_indent'>Flickr<div class='next_arrow'></div></div>-->
+            </div>
+            
+            
+            
+            <div class='header'><div class='header_content'>About app</div ></div>
+            <div style='background-color:#ffffff;'>
+                <div class='item_cell' onclick="go_FAQ()">FAQ<div class='next_arrow'></div></div>
+                <div class='item_cell item_indent' onclick="go_terms()"> Terms of Services<div class='next_arrow'></div></div>
+                
+            </div>
+            <div class='logout_header'><div class='header_content'></div ></div>
+            <div class='item_cell last' onclick="logout()">Logout<div class='next_arrow'></div></div>
+        </div>
+        
+        <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+        <script type="text/javascript" language="JavaScript">
+            
+            document.addEventListener("deviceready", onDeviceReady, true);
+            function onDeviceReady() {
+                OAuth.initialize('afp7LBQQdl0vtAUyyPcohhHgoM4');
+                if(window.localStorage.getItem('fb_name')===null){
+                    console.log('0000');
+                }else{
+                     console.log('1111'+window.localStorage.getItem('fb_name'));
+                    $('#fb_name').html(window.localStorage.getItem('fb_name'));
+                }
+
+            }
+        function logout(){
+            window.localStorage.clear();
+            window.location='index.html';
+
+        }
+        function show_setting(){
+        }
+        function back(){
+            window.history.back();
+        }
+        
+        function edit_info(){
+            window.location='edit_userInfo.html';
+            
+        }
+        function go_FAQ(){
+            window.location='faq.html';
+            
+        }
+        function go_terms(){
+            window.location='terms.html';
+            
+        }
+        function check_fb_permission(){
+                if(window.localStorage.getItem('fb_name')===null){
+                    fb_getPermission();
+
+                }else {
+                        window.location='fb_del_permission.html';
+
+                }
+
+               
+        }
+
+        function fb_getPermission(){
+                 ActivityIndicator.show('Loading');
+                facebookConnectPlugin.api( "me/?fields=id,name,email", ["publish_actions"],
+                                          function (response) {
+                                            console.log(response);
+                                           window.localStorage.setItem('fb_id',response['id']);
+                                           window.localStorage.setItem('fb_name',response['name']);
+                                           ActivityIndicator.hide();
+                                          $('#fb_name').html(response['name']);
+                                       },
+                                          function (response) { console.log(JSON.stringify(response)) });
+                facebookConnectPlugin.getAccessToken(
+                    function (response) { 
+                        console.log(response);
+                        window.localStorage.setItem('fb_accessToken',response);
+                                    
+                        },
+                    function (response) { console.log(JSON.stringify(response)) });
+
+        }
+        function Twitter_getPerrmission(){
+            OAuth.popup('twitter', {
+                        cache: true
+                        })
+            .done(function(result) {
+                  console.log(result);
+                  window.localStorage.setItem("twitter_token",result['oauth_token']);
+                  window.localStorage.setItem("twitter_secret",result['oauth_token_secret']);
+
+                  })
+        .fail(function (err) {
+            console.log(err);
+            //handle error with err
+            });
+        }
+        </script>
+    </body>
+</html>

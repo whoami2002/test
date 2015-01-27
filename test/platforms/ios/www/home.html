@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+ 
+ http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ -->
+<html>
+    <head>
+        
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/home.css" />
+        <link rel="stylesheet" type="text/css" href="css/layout.css" />
+
+
+        <title>Hello World</title>
+    </head>
+    <body  >
+        <div >
+            <div class='status_bar'></div>
+            <div class='nav_bar'><div class='nav_left' >&nbsp;</div><div class='nav_title'>Recent</div><div class='nav_right'><img src='img/stream-view_L.png' id='right_icon' class='right_icon' onclick='swap_view()'></div></div></div>
+        
+        <!------------content area---------------->
+        <div id='view' class='view'  >
+            <!--           -->
+
+        </div>
+        <div class='tabbar'><div class='tabbar_item'><img src='img/tab bar/tab home blue L.png' width='20%'></div><div class='tabbar_item'><img onclick=" window.location='popular.html';"src='img/tab bar/tab popular grey L.png' width='20%'></div><div class='tabbar_item'><img src='img/tab bar/tab camera grey L.png' width='20%' onclick=" postShareSheet() "></div><div class='tabbar_item'><img src='img/tab bar/tab notif grey L.png' width='20%' onclick=" window.location='notify.html';"></div><div class='tabbar_item'><img src='img/tab bar/tab profile grey L.png' width='20%' onclick=" window.location='profile.html';"></div></div>
+        </div>
+        
+        <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+        
+        <script type="text/javascript" language="JavaScript">
+            
+            //variables---------------------------
+            var is_grid=true;
+            var medias=[];
+            var accessToken='';
+            var device_id='F1BEAC93-C8DA-4B41-911B-3F5A30FB7274';
+            var device_type= 'ios';
+            var data_array=[];
+            var append_array=[];
+            var page_array;
+            var limit_count=300;
+            var last_id=0;
+            var is_loading=false;
+            var clicked_share_link='';
+            var clicked_share_img='';
+            var tempScrollTop=0;
+            //-------------------------------------
+
+            document.addEventListener("deviceready", onDeviceReady, true);
+            function onDeviceReady() {
+                accessToken=window.localStorage.getItem('accessToken');
+                get_list();
+                
+                //localStorage.setItem("pref1", "val1");
+                //show_grid_view();
+                // ActivityIndicator.hide();
+            }
+       
+        
+        function back(){
+            window.history.back();
+        }
+        
+        
+        function show_grid_view(is_swap){
+            var duplicate_data=is_swap?data_array: append_array;
+            var count=duplicate_data.length;
+            var image_url='';
+            var cur_data_count=data_array.length;
+            var img_id=0;
+
+            var list=is_swap?"<table id='grid_table' style='width:100%' cellpadding='0' cellspacing='0'><tbody>":"";
+            for(var i=0;i<count;i++){
+                img_id=duplicate_data[i]['id'];
+                image_url=duplicate_data[i]['picture'];
+                if(i%2==0){
+                    list+='<tr><td><img class="preview" style="background-image: url('+image_url+') " onclick="get_detail('+img_id+')"></td>';
+                    if(i==count-1){
+                        list+='</tr>';
+                    }
+                }else {
+                    list+='<td><img class="preview" style="background-image: url('+image_url+') " onclick="get_detail('+img_id+')"></td></tr>';
+                }
+                
+            }
+            if(is_swap){
+                list+="</tbody></table>";
+                document.getElementById("view").innerHTML=list;
+            }else {
+                ActivityIndicator.hide();
+
+                $('#grid_table > tbody:last').append(list);
+            }
+            is_loading=false;
+            if( window.localStorage.getItem('newest_scroll')!=null){
+                console.log('have scroll');
+                $('#view').scrollTop(window.localStorage.getItem('newest_scroll'));
+                window.localStorage.removeItem('newest_scroll');
+            }else{
+                console.log('no scroll');
+            }
+
+
+        }
+        function show_list_view(is_swap){
+            var list='';
+            var audio_address='';
+            var user_name='';
+            var time='';
+            var image_url='';
+            var liked=false;
+            var count_like=0;
+            var count_comment=0;
+            var duplicate_data=is_swap?data_array: append_array;
+            var count=duplicate_data.length;
+            var cur_data_count=data_array.length-append_array.length;
+            var abs_cout=0;
+            var img_id=0;
+            var avatar_url='';
+            var share_link='';
+            var user_info_array='';
+            for(var i=0;i<count;i++){
+                 audio_address=duplicate_data[i]['audio'];
+                 time=relative_time(duplicate_data[i]['createdAt']);
+                 liked=duplicate_data[i]['liked'];
+                 count_like=duplicate_data[i]['likeCount'];
+                 count_comment=duplicate_data[i]['commentsCount'];
+                 abs_cout=is_swap?i:i+cur_data_count;
+                 img_id=duplicate_data[i]['id'];
+                 avatar_url=duplicate_data[i]['user']['avatar']==''?'img/default-profile-pic_120.png':duplicate_data[i]['user']['avatar'];
+                  share_link=duplicate_data[i]['shareLink'];
+                  user_info_array=encodeURIComponent(JSON.stringify(duplicate_data[i]["user"]));
+                  
+               list+="<div style='border: solid #999999;border-width:0;border-top-width:1px;'>";
+                //-------------------------------
+                user_info="<div class='user_row'>"; //the row of user info
+                user_info+='<div style="display:inline-block;float:left;height:40px;"><img class="user_icon" src="'+avatar_url+'" onclick="view_profile(\''+user_info_array+'\')"></div>';
+                user_info+='<div class="user_name" onclick="view_profile(\''+user_info_array+'\')">'+duplicate_data[i]["user"]["name"]+'</div><div class="post_time">'+time+'</div>';
+                user_info+="</div>";
+               
+                list+=user_info;
+                //----------------------------------
+                //the image of the post
+                list+="<div style='text-align:center'><img class='img_list' src='"+duplicate_data[i]['picture']+"'   onclick='get_detail("+img_id+")'></div>";
+              
+              
+                if(duplicate_data[i]['audio']==''){
+                    medias.push('');
+                }else{
+                    medias.push(new Media(duplicate_data[i]['audio'], onMediaSuccess, onMediaError, onMediaStatus));
+
+                    //-----------------------------------
+                    //the play bar of the sound
+                    list+="<div class='play_bar'>";
+                    list+="<div class='play_button'><img id='btn_play_"+(abs_cout)+"'  src='img/play bar/play_L.png' class='play_icon' onclick='play_audio("+abs_cout+")'></div>";
+                    //list+="<div class='play_slider'>";
+                    //list+="<input type='range' name='slider' id='slider' value='0' min='0' max='100' data-highlight='true'  style='width: 100%;margin-top: 10px;'/>";
+                    //list+="</div>";
+                     list+="</div>";
+                }
+                //-----------------------------------
+                //the statistic of the post
+                var stat_info="<div style='height:35px'>";
+                //like icon
+                var like_img='';
+                if(duplicate_data[i]['liked']){
+                    like_img='img/liked_L.png';
+                }else{
+                    like_img='img/like_L.png';
+                }
+                stat_info+="<div  style='display:inline-block;float:left;height:35px;line-height:35px;margin-left:15px;' ><img id='btn_like"+img_id+"'class='small_icon' src='"+like_img+"' onclick='updateLike("+img_id+")'></div>";
+                //number of likes
+                stat_info+="<div id='count_like"+img_id+"' class='stat_num' >"+count_like+"</div>";
+                //comment icon
+                stat_info+="<div  style='display:inline-block;float:left;height:35px;line-height:35px;' onclick='redirect_comment("+img_id+")';><img class='small_icon' src='img/comment_L.png'></div>";
+                //number of comment
+                stat_info+="<div class='stat_num' onclick='redirect_comment("+img_id+")';>"+count_comment+"</div>";
+                
+                //share icon
+                stat_info+='<div  style="display:inline-block;float:right;height:35px;line-height:35px;margin-right:15px;"><img class="small_icon" src="img/share_L.png" onclick="shareSocialSheet(\''+share_link;
+                if(duplicate_data[i]['audio']==''){
+                    stat_info+='!!!!!!'+duplicate_data[i]['picture'];
+                }
+                
+                stat_info+='\')"></div>';
+                
+                stat_info+="</div>";
+                //-------------------------------
+                list+="</div>";
+                list+=stat_info;
+            }
+            if(last_id==0||is_swap)
+            document.getElementById("view").innerHTML=list;
+            else {
+                ActivityIndicator.hide();
+                document.getElementById("view").innerHTML+=list;
+
+            }
+            is_loading=false;
+            if( window.localStorage.getItem('newest_scroll')!=null){
+                console.log('have scroll');
+                $('#view').scrollTop(window.localStorage.getItem('newest_scroll'));
+            }else{
+                console.log('no scroll');
+            }
+           
+            
+        }
+        function swap_view(){
+            $('#view').scrollTop(0);
+            if(is_grid){
+                console.log('show_list');
+                medias=[];
+                show_list_view(true);
+                is_grid=false;
+                document.getElementById("right_icon").src="img/grid-view_L.png";
+            }else {
+                console.log('show_grid');
+
+                show_grid_view(true);
+                is_grid=true;
+                document.getElementById("right_icon").src="img/stream-view_L.png";
+            }
+        }
+        
+        function redirect_comment(img_id){
+            window.location='comment.html?id='+img_id;
+        }
+        
+        function onMediaSuccess() {
+            console.log("onMediaSuccess");
+            
+        }
+        
+        function onMediaError(e) {
+            var msgText = "Media error: " + e.message + "(" + e.code + ")";
+            console.log(msgText);
+            //navigator.notification.alert(msgText, null, "Media Error");
+            //$('.play_icon').attr('src', "img/play bar/play_L.png");
+            $('.play_icon').hide(0).attr('src',"img/play bar/play_L.png").show(0);
+        }
+        
+        function onMediaStatus(statusCode) {
+            console.log("Status: " + statusCode);
+            if(statusCode==4){
+                //$('.play_icon').attr('src', "img/play bar/play_L.png");
+                //  document.getElementById(".play_icon").src="img/play bar/play_L.png";
+                $('.play_icon').hide(0).attr('src',"img/play bar/play_L.png").show(0);
+
+            }
+        }
+        
+        function play_audio(audio_num){
+            //console.log(media.getDuration());
+            // medias[audio_num].play();
+            // medias[audio_num].play();
+            // medias[audio_num].stop();
+            //alert( medias[audio_num].getDuration());
+            if( $('#btn_play_'+audio_num).attr('src') == "img/play bar/play_L.png"){
+                
+                medias[audio_num].play();
+                console.log('play'+audio_num);
+
+                $('#btn_play_'+audio_num).hide(0).attr('src',"img/play bar/pause_L.png").show(0);
+            }else {
+                console.log('pause'+audio_num);
+
+                medias[audio_num].pause();
+                $('#btn_play_'+audio_num).hide(0).attr('src',"img/play bar/play_L.png").show(0);
+            }
+            
+        }
+        
+        function get_detail(image_id){
+            var tempScrollTop = $('#view').scrollTop();
+           window.localStorage.setItem('newest_scroll',tempScrollTop);
+                                  
+                                 // $(window).scrollTop(tempScrollTop);
+            window.location='home_detail.html?img_id='+image_id;
+            
+        }
+        
+        
+        
+        
+        function postShareSheet() {
+            var options = {
+                //'title': 'What do you want with this image?',
+                'buttonLabels': ['Take Photo','Select from camera roll', 'Select from album'],
+                //'androidEnableCancelButton' : true, // default false
+                'addCancelButtonWithLabel': 'Cancel',
+            };
+            
+            window.plugins.actionsheet.show(options, callback);
+        };
+        
+        var callback = function(buttonIndex) {
+            //setTimeout(function() {
+            // like other Cordova plugins (prompt, confirm) the buttonIndex is 1-based (first button is index 1)
+            //alert('button index clicked: ' + buttonIndex);
+            //    });
+            if(buttonIndex==1){
+                window.location='upload.html?source=1';
+            }else if(buttonIndex==2){
+                window.location='upload.html?source=2';
+            }else if(buttonIndex==3){
+                window.location='upload.html?source=3';
+            }
+            
+        };
+        
+        function shareSocialSheet(link) {
+            var split_array=link.split('!!!!!!');
+            if(split_array.length==1){
+                clicked_share_link=split_array[0];
+                clicked_share_img='';
+            }else {
+                clicked_share_link=split_array[0];
+                clicked_share_img=split_array[1];
+            }
+            var options = {
+                //'title': 'What do you want with this image?',
+                'buttonLabels': [ 'Whatsapp', 'Line', 'Wechat','Instagram','Facebook',],
+                //'androidEnableCancelButton' : true, // default false
+                'addCancelButtonWithLabel': 'Cancel',
+            };
+            
+            window.plugins.actionsheet.show(options, shareSocial);
+        };
+        var shareSocial = function(buttonIndex) {
+            //setTimeout(function() {
+            // like other Cordova plugins (prompt, confirm) the buttonIndex is 1-based (first button is index 1)
+            //alert('button index clicked: ' + buttonIndex);
+            //    });
+            if(buttonIndex==1){
+                //whatsapp
+                console.log('whatsapp');
+                if(clicked_share_img==''){
+                    window.plugins.socialsharing.shareViaWhatsApp(null, null /* img */, clicked_share_link, function() {console.log('share ok')}, function(errormsg){alert(errormsg)});
+                }else {
+                    window.plugins.socialsharing.shareViaWhatsApp(null,  clicked_share_img/* img */,null , function() {console.log('share ok')}, function(errormsg){alert(errormsg)})
+                    
+                }
+                
+               
+            }else if(buttonIndex==2){
+                //line
+                console.log('line');
+                window.plugins.socialsharing.share(null, null, 'https://www.google.nl/images/srpr/logo4w.png', null);
+            }else if(buttonIndex==3){
+                //wechat
+                console.log('wechat');
+                if(clicked_share_img==''){
+                    console.log('share link');
+                    Wechat.share({
+                                 message: {
+                                 title: "",
+                                 description: "",
+                                 mediaTagName: "",
+                                 thumb: clicked_share_img,
+                                 media: {
+                                 type: Wechat.Type.WEBPAGE,   // webpage
+                                 webpageUrl: clicked_share_link    // webpage
+                                 }
+                                 },
+                                 scene: Wechat.Scene.TIMELINE   // share to Timeline
+                                 }, function () {
+                                 console.log("Success");
+                                 }, function (reason) {
+                                 console.log("Failed: " + reason);
+                                 });
+                }else {
+                    console.log('share image');
+
+                    Wechat.share({
+                                 message: {
+                                 title: "",
+                                 description: "",
+                                 mediaTagName: "",
+                                 thumb: '',
+                                 media: {
+                                 type: Wechat.Type.WEBPAGE,   // webpage
+                                 webpageUrl: clicked_share_link    // webpage
+                                 }
+                                 },
+                                 scene: Wechat.Scene.TIMELINE   // share to Timeline
+                                 }, function () {
+                                 console.log("Success");
+                                 }, function (reason) {
+                                 console.log("Failed: " + reason);
+                                 });
+                    
+                }
+
+
+
+            }else if(buttonIndex==4){
+                console.log('instagram');
+                share_twitter();
+            }else if(buttonIndex==5){
+                console.log('facebook');
+                share_fb();
+            }
+            
+        };
+        function get_list(){
+            $.get( "http://selfie.gutschat.com/api/photo/newest",
+                  {
+                  limit:limit_count,
+                  device_type: device_type,
+                  device_id:device_id,
+                  access_token:accessToken
+                  
+                  },function(result){
+                  if(result&&result['pagination']){
+                    page_array=result['pagination'];
+                    last_id=page_array['after'];
+                  append_array=result['data'];
+                  data_array=result['data'];
+                  //console.log(append_array);
+                  
+                  //--------------display the list-----------------
+                  show_grid_view(true);
+                  }else {
+                  // navigator.notification.alert('Invalid Email', null, "");
+                  
+                  }
+                  
+                  /*if(result['success']){
+                   console.log('success');
+                   
+                   }else{
+                   navigator.notification.alert('The verification code is incorrect or expired. Please try again.', null, "");
+                   }*/
+                  }
+                  
+                  )
+                  .fail( function(xhr, textStatus, errorThrown) {
+                        console.log(xhr.responseText, null, "");
+                        //navigator.notification.alert('fail to connection server.', null, "");
+                        });
+                        
+        }
+        function get_list_append(){
+            if(last_id !=-1){
+                $.get( "http://selfie.gutschat.com/api/photo/newest",
+                      {
+                      limit:limit_count,
+                      after:last_id,
+                      device_type: device_type,
+                      device_id:device_id,
+                      access_token:accessToken
+                      
+                      },function(result){
+                      if(result&&result['pagination']){
+                      
+                      page_array=result['pagination'];
+                      console.log(page_array);
+                      
+                      last_id=page_array['after'];
+                      
+                      append_array=result['data'];
+                      $.merge(data_array,append_array);
+                      if(page_array['total']<100){
+                      last_id=-1;
+                      console.log('set -1');
+                      }
+                      
+                      if(is_grid){
+                      //append_array
+                      show_grid_view(false);
+                      }else {
+                      show_list_view(false);
+                      }
+                      }else {
+                      //navigator.notification.alert('Invalid Email', null, "");
+                      
+                      }
+                      
+                      /*if(result['success']){
+                       console.log('success');
+                       
+                       }else{
+                       navigator.notification.alert('The verification code is incorrect or expired. Please try again.', null, "");
+                       }*/
+                      }
+                      
+                      )
+                      .fail( function(xhr, textStatus, errorThrown) {
+                            console.log(xhr.responseText, null, "");
+                            //navigator.notification.alert('fail to connection server.', null, "");
+                            });
+            }
+            
+                        
+        }
+        $('#view').bind('scroll', function()
+                        {
+                        if($(this).scrollTop() + $(this).innerHeight()>=$(this)[0].scrollHeight-50)
+                        {
+                            if(!is_loading&&last_id!=-1){
+                                ActivityIndicator.show('Loading');
+                                is_loading=true;
+                                get_list_append();
+                            }
+                        
+                        }
+        })
+        
+        function relative_time(time){
+            var datetime = new Date();
+            var cur_sec=datetime.getTime()/1000;
+            var difference = cur_sec - time;
+            
+            // Customize in your own language.
+            var periods = [ "sec", "min", "hour", "day", "week", "month", "year"];
+            var lengths = [ "60","60","24","7","4.35","12"];
+            var ending='';
+            if (difference > 0) { // this was in the past
+                ending = "ago";
+            }else {
+                return 'Just now';
+            }
+            for( var j=0; difference>=lengths[j] && j < 6; j++ )
+            difference /= lengths[j];
+            difference = Math.floor(difference);
+            if( difference != 1 ){
+                // Also change this if needed for an other language
+                periods[j]+= "s";
+            }
+            if(periods[j]=="sec"||periods[j]=="secs")
+            return 'Just now';
+            
+            var text = difference+' '+periods[j]+ ' '+ending;
+            return text;
+        }
+
+        function updateLike(img_id){
+            var count=$('#count_like'+img_id).html();
+
+            if($('#btn_like'+img_id).attr('src')=='img/like_L.png'){
+                $('#btn_like'+img_id).hide(0).attr('src','img/liked_L.png').show(0);
+                $('#count_like'+img_id).html(++count);
+                like_img_post(img_id,'like');
+            }else{
+                $('#btn_like'+img_id).hide(0).attr('src','img/like_L.png').show(0);
+                $('#count_like'+img_id).html(--count);
+                like_img_post(img_id,'unlike');
+
+            }
+        }
+        function like_img_post(img_id,link){
+            var  url="http://selfie.gutschat.com/api/photo/"+link;
+            $.post( url,
+                  {
+                  photo_id:img_id,
+                  device_type: device_type,
+                  device_id:device_id,
+                  access_token:accessToken
+                  
+                  },function(result){
+
+                  console.log(result);
+
+                  if(result&&result['success']){
+                    console.log('succ');
+                  }
+                  
+                  /*if(result['success']){
+                   console.log('success');
+                   
+                   }else{
+                   navigator.notification.alert('The verification code is incorrect or expired. Please try again.', null, "");
+                   }*/
+                  }
+                  
+                  )
+                  .fail( function(xhr, textStatus, errorThrown) {
+                        console.log(xhr.responseText, null, "");
+                        //navigator.notification.alert('fail to connection server.', null, "");
+                    });
+                        
+        }
+        function share_fb() {
+            facebookConnectPlugin.showDialog( { method: "feed",link:clicked_share_link},
+                                             function (response) { console.log(JSON.stringify(response)) },
+                                             function (response) { console.log(JSON.stringify(response)) });
+        }
+        
+        function share_twitter(){
+            console.log(clicked_share_link);
+            window.plugins.socialsharing.shareViaTwitter(null, null /* img */, clicked_share_link)
+        }
+        function view_profile (user_info) {
+            //window.localStorage.setItem('profile_info',JSON.stringify(img_detail['user']));
+            window.location='profile_push.html?user_info='+user_info;
+            
+        }
+               </script>
+    </body>
+</html>

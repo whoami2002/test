@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/faq.css" />
+         <link rel="stylesheet" type="text/css" href="css/layout.css" />
+
+        <title>Hello World</title>
+    </head>
+    <body>
+         <div >
+            <div class='status_bar'></div>
+            <div class='nav_bar'><div class='nav_left'><img class="left_icon" src='img/arrow-left-72.png' onclick="back()"></div><div class='nav_title'>FAQ</div><div class='nav_right'>&nbsp;</div></div></div>
+        
+        
+        <!------------content area---------------->
+        <div id='view' class='view' >
+          <ol>
+            <li>
+            <div class='question' >What is Selfie Share?</div>
+            <div class='ans'>Selfie Share is a lively and quirky way to share selfies with friends. Snap a selfie, then say something to add meanings or fun. Friends will hear your narration when viewing it. You are not only taking a photo, but also telling a story.</div>
+            </li>
+            <li>
+            <div class='question'> Could I share photo via other social platforms?</div>
+            <div class='ans'>Yes, you could share your photo on Facebook, Instagram, Twitter, Flickr or Tumblr. In the last stage of uploading a photo, select platform(s) that you would like to post photo on. Then you could post photo to multiple platforms automatically.</div>
+            </li>
+            <li>
+            <div class='question'>Could I forward the photo to Instant Messaging apps like WhatsApp?</div>
+            <div class='ans'>Yes. There is an arrow button in bottom right of each photo. Click that button and share photos with friends via WhatsApp, WeChat or Line.</div>
+            </li>
+            <li>
+            <div class='question'>Who can see my photo?</div>
+            <div class='ans'>All photos are public by default, which means they are visible to anyone using Selfie Share. We would probably add "private" option in the near future.</div>
+            </li>
+            <li>
+            <div class='question'>I have a technical problem or support issue I need resolved, who do I email?</div>
+            <div class='ans'>Please get in touch with us by sending email to support@gutschat.com</div>
+            </li>
+            
+          </ol>
+        </div>
+        
+        
+    <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+        <script type="text/javascript" language="JavaScript">
+
+         function back(){
+            window.history.back();
+        }
+    </script>   
+    </body>
+</html>

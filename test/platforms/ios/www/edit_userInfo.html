@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/edit_userInfo.css" />
+        <link rel="stylesheet" type="text/css" href="css/layout.css" />
+
+        <title>Hello World</title>
+    </head>
+    <body>
+        <div >
+            <div class='status_bar'></div>
+            <div class='nav_bar'><div class='nav_left' ><img class="left_icon" src='img/arrow-left-72.png' onclick="back()"></div><div class='nav_title'>Update Profile</div></div>
+            
+            <!------------content area---------------->
+            <div>
+                <img id='avatar' class='circular' src='img/default-profile-pic_120.png' >
+
+                <canvas class='circular' id='avatar_canvas' style='display:none;'>
+                </canvas>
+                <div  class='btn_edit' >Click image to update</div>
+                <input type='text' id='username'    class='username' placeholder='Username'>
+                <button class='btn_done' onclick='submit()'>Done</button>
+            </div>
+            
+        </div>
+        <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+        <script type="text/javascript" language="JavaScript">
+            
+        var name='';
+        var pictureSource;   // picture source
+        var destinationType; // sets the format of returned value
+        var image_URI='';
+        document.addEventListener("deviceready", onDeviceReady, false);
+        function onDeviceReady() {
+            pictureSource=navigator.camera.PictureSourceType;
+            destinationType=navigator.camera.DestinationType;
+            var info = JSON.parse(window.localStorage.getItem('user'));
+            name=info["name"] ;
+            $('#username').val(name);
+            // var avatar_canvas=document.getElementById('avatar_canvas');
+            // var avatar_image=document.getElementById('avatar');
+            // var ctx = avatar_canvas.getContext("2d");
+            // avatar_canvas.width = 90;
+            // avatar_canvas.height = 90;
+            // ctx.drawImage(avatar_image, 0, 0,90,90);
+        }
+        function back(){
+            window.history.back();
+        }
+        
+        function submit_post(){
+           
+            
+            if($.trim($('#username').val()).length>20||$.trim($('#username').val()).length<3){
+                navigator.notification.alert('Please choose a user name between 3-20 characters.', null, "");
+            }else {
+                $.post( "http://selfie.gutschat.com/api/user/update",
+                       {
+                       name: $.trim($('#username').val()),
+                       //avater: email,
+                       device_type: 'ios',
+                       device_id:'F1BEAC93-C8DA-4B41-911B-3F5A30FB7274',
+                       access_token:window.localStorage.getItem('accessToken')
+                       
+                       },function(result){
+                       console.log('result:');
+                       console.log(result);
+                       if(result['success']){
+                       console.log('success');
+                       
+                       }else{
+                       navigator.notification.alert('The verification code is incorrect or expired. Please try again.', null, "");
+                       }})
+                       .fail( function(xhr, textStatus, errorThrown) {
+                             console.log(xhr.responseText, null, "");
+                             navigator.notification.alert('fail', null, "");
+                        });
+            }
+           
+        }
+        
+        // Called when a photo is successfully retrieved
+        //
+        function onPhotoDataSuccess(imageData) {
+            // Uncomment to view the base64 encoded image data
+            console.log(imageData);
+            console.log('take photo');
+            
+            // document.getElementById('selected_img').src = "data:image/jpeg;base64," + imageData;
+            document.getElementById('avatar').src=imageData;
+            image_URI=imageData;
+        }
+        
+        // Called when a photo is successfully retrieved
+        //
+        function onPhotoURISuccess(imageURI) {
+            // Uncomment to view the image file URI
+            //
+            var largeImage = document.getElementById('avatar');
+            console.log(imageURI);
+            image_URI=imageURI;
+            document.getElementById('avatar').src=imageURI;
+            
+            /*largeImage.onload = function()
+            {
+                
+                var width = largeImage.naturalHeight;
+                var height = largeImage.naturalWidth;
+                
+                if (width > height) {
+                    width=height;
+                } else {
+                    height=width;
+                }
+                
+                var avatar_canvas=document.getElementById('avatar_canvas');
+                avatar_canvas.width = width;
+                avatar_canvas.height = height;
+                var ctx = avatar_canvas.getContext("2d");
+                ctx.drawImage(largeImage, 0, 0, width, height);
+                
+                image_URI=avatar_canvas.toDataURL("image/jpeg");
+            }*/
+
+
+            //largeImage.style.background = "url('"+imageURI+"')";
+            //largeImage.style.backgroundSize = 'cover';
+
+        }
+        
+        // A button will call this function
+        //
+        function capturePhoto() {
+            // Take picture using device camera and retrieve image as base64-encoded string
+            navigator.camera.getPicture(onPhotoDataSuccess, onFail, { quality: 50,correctOrientation:true });
+        }
+        
+        // A button will call this function
+        //
+        function capturePhotoEdit() {
+            // Take picture using device camera, allow edit, and retrieve image as base64-encoded string
+            navigator.camera.getPicture(onPhotoDataSuccess, onFail, { quality: 20, allowEdit: true });
+        }
+        
+        // A button will call this function
+        //
+        function getPhoto(source) {
+            // Retrieve image file location from specified source
+            navigator.camera.getPicture(onPhotoURISuccess, onFail, { quality: 50,
+                                        destinationType: destinationType.FILE_URI,
+                                        sourceType: source });
+        }
+        var callback = function(buttonIndex) {
+            //setTimeout(function() {
+            // like other Cordova plugins (prompt, confirm) the buttonIndex is 1-based (first button is index 1)
+            //alert('button index clicked: ' + buttonIndex);
+            //    });
+            if(buttonIndex==1){
+                capturePhoto();
+            }else if(buttonIndex==2){
+                getPhoto(pictureSource.SAVEDPHOTOALBUM);
+                
+            }else if(buttonIndex==3){
+                getPhoto(pictureSource.PHOTOLIBRARY);
+                
+            }
+        };
+        
+        function onFail(message) {
+            console.log(message);
+        }
+        
+        function edit() {
+            var options = {
+                //'title': 'What do you want with this image?',
+                'buttonLabels': ['Take Photo','Select from camera roll', 'Select from album'],
+                //'androidEnableCancelButton' : true, // default false
+                'addCancelButtonWithLabel': 'Cancel',
+            };
+            
+            window.plugins.actionsheet.show(options, callback);
+        };
+        function submit() {
+            if($.trim($('#username').val()).length>20||$.trim($('#username').val()).length<3){
+                navigator.notification.alert('Please choose a user name between 3-20 characters.', null, "");
+            }else {
+                var options = new FileUploadOptions();
+                options.fileKey="avatar";
+                options.fileName="ava";
+                options.mimeType="image/jpg";
+            
+                var params = {};
+                params.name = $.trim($('#username').val());
+                params.device_type = 'ios';
+                params.device_id ='F1BEAC93-C8DA-4B41-911B-3F5A30FB7274';
+                params.access_token=window.localStorage.getItem('accessToken');
+
+                options.params = params;
+            
+                var ft = new FileTransfer();
+                ft.upload(image_URI, encodeURI("http://selfie.gutschat.com/api/user/update"), succ, fail, options);
+            }
+        }
+        var succ = function(r) {
+            console.log("Code = " + r.responseCode);
+            console.log("Response = " + r.response);
+            console.log("Sent = " + r.bytesSent);
+        }
+        
+        var fail = function(error) {
+            alert("An error has occurred: Code = " + error.code);
+            console.log("upload error source " + error.source);
+            console.log("upload error target " + error.target);
+        }
+        </script>
+    </body>
+</html>

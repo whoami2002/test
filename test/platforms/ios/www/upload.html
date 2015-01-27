@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+ 
+ http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ -->
+<html>
+    <head>
+        
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/upload.css" />
+        <link rel="stylesheet" type="text/css" href="css/layout.css" />
+        <title>Hello World</title>
+    </head>
+    <body>
+        <div >
+            <div class='status_bar'></div>
+            <div class='nav_bar'><div class='nav_left' > <img class="left_icon" src='img/arrow-left-72.png' onclick="back()"></div><div class='nav_title'>Recording</div><div class='nav_right' id='btn_right'></div></div></div>
+        
+        
+        <!------------content area---------------->
+        <div id='view' class='view' >
+            <div style='text-align:center;vertical-align:center;margin-top:40px;'>
+                <div id='btn_record'style='width:50%;display:inline-block;float:left;'><img id='record_icon' style='width:100%' src="img/record sound/record_L.png" /><div style="font-size: 19px;color: #404040;">Hold to record</div></div>
+                <div > <img id='selected_img' class='selected_img' src=''></div>
+
+            </div>
+            <div style="clear:both"></div>
+            <div id='redo_bar' class='redo_bar'>
+                <div class='redo_button'>
+                    <img id="btn_redo" class='redo_icon' src="img/record sound/redo-large.png" onclick='redo()'>
+                </div>
+            </div>
+            <div id='suggestion' class='suggestion'>Suggestion</div>
+            <div id='options'></div>
+
+            <!--<div class='option'>Good morning!</div>
+            <div class='option'>Hello!</div>
+            <div class='option'>Want to meet new friend</div>
+            <div class='option'>Feel free to chat with me!</div>-->
+        </div>
+        <div class='tabbar'><div class='tabbar_item'><img src='img/tab bar/tab home grey L.png' width='20%' onclick=" window.location='home.html';"></div><div class='tabbar_item'><img src='img/tab bar/tab popular grey L.png' width='20%'></div><div class='tabbar_item'><img src='img/tab bar/tab camera blue L.png' width='20%' onclick=" testShareSheet() "></div><div class='tabbar_item'><img src='img/tab bar/tab notif grey L.png' width='20%' onclick=" window.location='notify.html';"></div><div class='tabbar_item'><img src='img/tab bar/tab profile grey L.png' width='20%' onclick=" window.location='profile.html';"></div></div>
+        </div>
+        <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+        <script type="text/javascript" language="JavaScript">
+            var pictureSource;   // picture source
+            var destinationType; // sets the format of returned value
+            var mediaVar = null;
+            var status = null;
+            var recordFileName = "recording.wav";
+            var image_url='';
+            var has_sound=0;
+            var str_suggest=["Good night","Sweet dreams","Good morning, everyone","The coffee is nice","I am so sleepy","I love selfies","I am not feeling well","Am I very fat?","I am cool!","Let's keep smiling","Don't worry, everything will be fine","I will always love you","Happy Birthday to me","Come on baby","Let me send you a big kiss","Please don't leave me","I love desserts","Like if you think I look great =]","I got a new dress","How are you today?","It's a nice day","Is someone missing me?","Look at my cat!","Thank you my dear!","What's wrong with me?","I am getting crazy","Where is my next destination?","I am falling love with you","Friendship forever","It's time to get fit!","Keep going, don't give up","I love sunshine","It's my all time favorites!","What haircut should I have?","I am still young","How do I look today?","I am so sorry","One live one love","You are driving me nuts","You are pissing me off!","Nothing is impossible","Just do it","Let's rock","It was a sleepless night"];
+            var random_optionID=[];
+        //----------------------
+            /*
+             <button onclick="capturePhoto();">Capture Photo</button> <br>
+             <button onclick="capturePhotoEdit();">Capture Editable Photo</button> <br>
+             <button onclick="getPhoto(pictureSource.PHOTOLIBRARY);">From Photo Library</button><br>
+             <button onclick="getPhoto(pictureSource.SAVEDPHOTOALBUM);">From Photo Album</button><br>
+             */
+        //--------------------------------------------
+          document.addEventListener("deviceready", onDeviceReady, true);
+            function onDeviceReady() {
+                pictureSource=navigator.camera.PictureSourceType;
+                destinationType=navigator.camera.DestinationType;
+                var photo_source = getURLParameter('source');
+                image_url=window.localStorage.getItem("selected_img");
+                // if ( image_url != null) {
+                    
+                //     document.getElementById('selected_img').style.background = "url("+ image_url+")";
+                //     document.getElementById('selected_img').style.backgroundSize = 'cover';
+                //     document.getElementById('btn_right').innerHTML="<div class='btn_next' onclick='next_record()'>Next</div>";
+                //     console.log(image_url);
+                // }else
+                 generate_options();
+
+                 if(photo_source==1){
+                    capturePhoto();
+                }else if(photo_source==2){
+                    getPhoto(pictureSource.SAVEDPHOTOALBUM);
+
+                }else if(photo_source==3){
+                    getPhoto(pictureSource.PHOTOLIBRARY);
+                    
+                }
+                var record = document.getElementById('btn_record');
+                //start record event
+                record.addEventListener('touchstart',start_record, false);
+                //stop record event
+                record.addEventListener('touchend', end_record, false);
+                
+              
+                
+                
+                //var sugg = document.getElementById('suggestion');
+                //sugg.addEventListener('click', play_record, false)
+               
+            }
+                           
+
+            function generate_options(){
+                for(;random_optionID.length<6;){
+                    var tmp_random_num=randomIntFromInterval(0,str_suggest.length-1);
+                   if (random_optionID.indexOf(tmp_random_num)==-1){
+                        random_optionID.push(tmp_random_num);
+                   }
+                }
+                //console.log(random_optionID);
+                for(var i=0;i<random_optionID.length;i++){
+                    
+                    document.getElementById('options').innerHTML+="<div class='option'>"+str_suggest[random_optionID[i]]+"</div>";
+
+                }
+            }
+            function randomIntFromInterval(min,max)
+            {
+                return Math.floor(Math.random()*(max-min+1)+min);
+            }
+        var start_record = function (){
+            console.log('start');
+            //mediaRec.startRecord();
+            createMedia(function(){
+                        status = "recording";
+                        mediaVar.startRecord();
+                      
+            },onStatusChange);
+        }
+        function createMedia(onMediaCreated, mediaStatusCallback){
+            console.log('starting');
+            if (mediaVar != null) {
+                onMediaCreated();
+                return;
+            }
+            //first create the file
+            window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem){
+                                         fileSystem.root.getFile(recordFileName, {
+                                                                 create: true,
+                                                                 exclusive: false
+                                                                 },
+                                                        function(fileEntry){
+                                                                 console.log("File " + recordFileName + " created at " + fileEntry.fullPath);
+                                                                 mediaVar = new Media('recording.wav', function(){
+                                                                                      console.log("Media created successfully");
+                                                                                      }, onError, mediaStatusCallback); //of new Media
+                                                                 onMediaCreated();
+                                                                 }, onError); //of getFile
+                                         }, onError); //of requestFileSystem
+        
+        }
+        function onStatusChange(statusCode)
+        {
+            console.log(statusCode);
+            if (statusCode == 4) //play stopped
+            {
+               console.log('play end ');
+                document.getElementById('record_icon').src='img/record sound/play_L.png';
+
+            }
+        }
+        
+        function onError(err)
+        {
+            
+            if(err.code==1){
+                navigator.notification.alert("To record a voice message, please go to your phone's privacy setting. Tap Microphone and turn on it.", null, "Please Allow Microphone Access");
+            }else
+            
+            if (typeof err.message != 'undefined'){
+                err = "Media error: " + err.message + "(" + err.code + ")";
+
+                navigator.notification.alert(err, null, "Error");
+            }
+           
+            //alert("Error : " + err);
+        }
+
+        var end_record = function (){
+            console.log('end');
+            has_sound=1;
+            mediaVar.stopRecord();
+            var record = document.getElementById('btn_record');
+            /*record.removeEventListener('touchstart', function(e){
+                                       console.log('start');
+                                       // alert pageX coordinate of touch point
+                                       }, false)
+            record.removeEventListener('touchend', function(e){
+                        console.log('end');
+                            }, false)*/
+            var new_element = record.cloneNode(true);
+            record.parentNode.replaceChild(new_element, record);
+
+            new_element.addEventListener('click', play_record, false)
+           document.getElementById('record_icon').src='img/record sound/play_L.png';
+           document.getElementById('redo_bar').style.display='block';
+        }
+        
+        var play_record=function(){
+            
+            if(mediaVar){
+                document.getElementById('record_icon').src='img/record sound/stop_L.png';
+
+                mediaVar.play();
+            console.log('play');
+            }else {
+                console.log('no audio');
+            }
+        }
+        //-------------------------   Ready ---------------------------
+
+      
+
+        // Called when a photo is successfully retrieved
+        //
+        function onPhotoDataSuccess(imageData) {
+            // Uncomment to view the base64 encoded image data
+            console.log(imageData);
+            console.log('take photo');
+            
+          // document.getElementById('selected_img').src = "data:image/jpeg;base64," + imageData;
+          image_url=imageData;
+             document.getElementById('selected_img').style.background = "url("+ imageData+")";
+            document.getElementById('selected_img').style.backgroundSize = 'cover';
+            document.getElementById('btn_right').innerHTML="<div class='btn_next' onclick='next_record()'>Next</div>";
+
+        }
+        
+        // Called when a photo is successfully retrieved
+        //
+        function onPhotoURISuccess(imageURI) {
+            // Uncomment to view the image file URI
+            //
+            var largeImage = document.getElementById('selected_img');
+            //console.log(imageURI);
+
+            //largeImage.src = imageURI;
+            image_url=imageURI;
+            largeImage.style.background = "url('"+imageURI+"')";
+            largeImage.style.backgroundSize = 'cover';
+            //$('#btn_right').html("<div class='btn_next' onclick='next_record()'>Next</div>");
+            document.getElementById('btn_right').innerHTML="<div class='btn_next' onclick='next_record()'>Next</div>";
+        }
+        
+        // A button will call this function
+        //
+        function capturePhoto() {
+            // Take picture using device camera and retrieve image as base64-encoded string
+            navigator.camera.getPicture(onPhotoDataSuccess, onFail, { quality: 50,correctOrientation:true });
+        }
+        
+        // A button will call this function
+        //
+        function capturePhotoEdit() {
+            // Take picture using device camera, allow edit, and retrieve image as base64-encoded string
+            navigator.camera.getPicture(onPhotoDataSuccess, onFail, { quality: 20, allowEdit: true });
+        }
+        
+        // A button will call this function
+        //
+        function getPhoto(source) {
+            // Retrieve image file location from specified source
+            navigator.camera.getPicture(onPhotoURISuccess, onFail, { quality: 50,
+                                        destinationType: destinationType.FILE_URI,
+                                        sourceType: source });
+        }
+        
+        // Called if something bad happens.
+        // 
+        function onFail(message) {
+            history.go(-1);
+            navigator.app.backHistory();
+        }
+        
+        function next_record(){
+
+            window.localStorage.setItem("has_audio", has_sound);
+            window.localStorage.setItem("selected_img",image_url);
+            window.location='upload_last.html';
+        }
+        
+        function back(){
+            
+
+            window.history.back();
+        }
+        
+        function redo(){
+            has_sound=0;
+
+            var record = document.getElementById('btn_record');
+                //start record event
+               
+
+            var new_element = record.cloneNode(true);
+            record.parentNode.replaceChild(new_element, record);
+
+             new_element.addEventListener('touchstart',start_record, false);
+                //stop record event
+                new_element.addEventListener('touchend', end_record, false);
+
+           document.getElementById('record_icon').src='img/record sound/record_L.png';
+           document.getElementById('redo_bar').style.display='none';
+        }
+
+
+        function getURLParameter(name) {
+            return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
+        }
+        
+        
+        </script>
+    </body>
+</html>

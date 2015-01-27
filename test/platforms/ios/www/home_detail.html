@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+ 
+ http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ -->
+<html>
+    <head>
+        
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/home_detail.css" />
+        <link rel="stylesheet" type="text/css" href="css/layout.css" />
+        <title>Hello World</title>
+    </head>
+    <body>
+        <div >
+            <div class='status_bar'></div>
+            <!--            <audio src='http://audio.ibeat.org/content/p1rj1s/p1rj1s_-_rockGuitar.mp3' id='sound'></audio>-->
+            <div class='nav_bar'><div class='nav_left' > <img class="left_icon" src='img/arrow-left-72.png' onclick="back()"></div><div class="nav_title"><div style=" height: 20px;font-size: 19px;line-height: 20px;" id='username'></div><div id='time' style="height: 10px;font-size: 12px;line-height: 10px;margin-top: 5px;
+                    "></div></div><div class='nav_right'><img id='right_icon' class='user_icon' style='float:right;' src=''></div></div></div>
+        
+        <!------------content area---------------->
+        <div id='view' class='view' >
+            
+            
+        </div>
+        
+        <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+        <script type="text/javascript" language="JavaScript">
+            
+            //variables---------------------------
+            var img_id='';
+            var accessToken='';
+            var device_id='F1BEAC93-C8DA-4B41-911B-3F5A30FB7274';
+            var device_type= 'ios';
+            var img_detail={};
+            var user_images=[];
+             var clicked_share_link='';
+            var clicked_share_img='';
+            var audio;
+            //-------------------------------------
+            
+            
+            document.addEventListener("deviceready", onDeviceReady, true);
+            function onDeviceReady() {
+               img_id=getURLParameter('img_id');
+                accessToken=window.localStorage.getItem('accessToken');
+                get_image();
+                //show_list_view();
+            }
+        
+        function back(){
+            window.history.back();
+        }
+        
+        
+        function show_image(){
+                var list='';
+                var img_id=img_detail['id'];
+                var count_like=img_detail['likeCount'];
+                var count_comment=img_detail['commentsCount'];
+                //var time=relative_time(img_detail['createdAt']);
+
+                $('#right_icon').attr('src',img_detail['user']['avatar']);
+                $('#time').html(relative_time(img_detail['createdAt']));
+                $('#username').html(img_detail['user']['name']);
+
+                list+="<div style='border: solid #999999;border-width:0;border-top-width:1px;'>";
+                //-------------------------------
+                // user_info="<div class='user_row'>"; //the row of user info
+                // user_info+="<div style='display:inline-block;float:left;height:40px;'><img class='user_icon' src='"+img_detail['user']['avatar']+"'></div>";
+                // user_info+="<div class='user_name'>"+img_detail['user']['name']+"</div><div class='post_time'>"+time+"</div>";
+                // user_info+="</div>";
+               
+                // //console.log(audio_address[i]);
+                // list+=user_info;
+                //----------------------------------
+                //the image of the post
+                list+="<div style='text-align:center'><img class='img_list' src='"+img_detail['picture']+"'></div>";
+              
+              
+                if(img_detail['audio']==''){
+                    audio='';
+                }else{
+                    audio=new Media(img_detail['audio'], onMediaSuccess, onMediaError, onMediaStatus);audio.play();
+                    //-----------------------------------
+                    //the play bar of the sound
+                    list+="<div class='play_bar'>";
+                    list+="<div class='play_button'><img id='btn_play'  src='img/play bar/pause_L.png' class='play_icon' onclick='play_audio()'></div>";
+                    //list+="<div class='play_slider'>";
+                    //list+="<input type='range' name='slider' id='slider' value='0' min='0' max='100' data-highlight='true'  style='width: 100%;margin-top: 10px;'/>";
+                    //list+="</div>";
+                     list+="</div>";
+                }
+                //-----------------------------------
+                //the statistic of the post
+                var stat_info="<div style='height:35px'>";
+                //like icon
+                var like_img='';
+
+                if(img_detail['liked']){
+                    like_img='img/liked_L.png';
+                }else{
+                    like_img='img/like_L.png';
+                }
+                stat_info+="<div  style='display:inline-block;float:left;height:35px;line-height:35px;margin-left:15px;' ><img id='btn_like"+img_id+"'class='small_icon' src='"+like_img+"' onclick='updateLike("+img_id+")'></div>";
+                //number of likes
+                stat_info+="<div id='count_like"+img_id+"' class='stat_num' >"+count_like+"</div>";
+                //comment icon
+                stat_info+="<div  style='display:inline-block;float:left;height:35px;line-height:35px;' onclick='redirect_comment("+img_id+")';><img class='small_icon' src='img/comment_L.png'></div>";
+                //number of comment
+                stat_info+="<div class='stat_num' onclick='redirect_comment("+img_id+")';>"+count_comment+"</div>";
+                 
+                stat_info+='<div  style="display:inline-block;float:right;height:35px;line-height:35px;margin-right:15px;"><img class="small_icon" src="img/share_L.png" onclick="shareSocialSheet(\''+img_detail['shareLink'];
+                if(img_detail['audio']==''){
+                    stat_info+='!!!!!!'+img_detail['picture'];
+                }
+                
+                stat_info+='\')"></div>';
+                
+                stat_info+="</div>";
+                //-------------------------------
+                list+="</div>";
+                list+=stat_info;
+            
+                var sq_counter=0;
+                var square_list="<div class='sq_list'>";
+                for(var i=0;i<user_images.length&&sq_counter<2;i++){
+                    if(user_images[i]['id']!=img_id){
+                       square_list+="<div class='sq_img' style='background-image:url("+user_images[i]['picture']+")' onclick='get_detail("+user_images[i]['id']+")'></div>"
+                        sq_counter++;
+                    }
+                }
+                square_list+="<div class='sq_img'  style='background-color:#909090;'><div style='font-size:20px;font-weight: bold;margin-top: 15px;margin-left: 20px' onclick='view_profile()'>View Profile</div></div>"
+
+                square_list+="</div>";
+                list+=square_list;
+            document.getElementById("view").innerHTML=list;
+            
+           
+        }
+        
+        function redirect_comment(img_id){
+            window.location='comment.html?id='+img_id;
+        }
+        
+        
+        var fileDur, theMedia;
+        
+        
+        function onMediaSuccess() {
+            console.log("onMediaSuccess");
+        }
+        
+        function onMediaError(e) {
+            var msgText = "Media error: " + e.message + "(" + e.code + ")";
+            console.log(msgText);
+            navigator.notification.alert(msgText, null, "Media Error");
+            $('.play_icon').attr('src', "img/play bar/play_L.png");
+
+        }
+        
+        function onMediaStatus(statusCode) {
+            console.log("Status: " + statusCode);
+            if(statusCode==4){
+                $('.play_icon').attr('src', "img/play bar/play_L.png");
+            }
+        }
+        
+        function play_audio(){
+            console.log('play');
+            //console.log(media.getDuration());
+           // medias[audio_num].play();
+           // medias[audio_num].play();
+           // medias[audio_num].stop();
+           //alert( medias[audio_num].getDuration());
+           if($("#btn_play").attr('src') === "img/play bar/play_L.png"){
+               audio.play();
+               //play_slider();
+                $("#btn_play").attr('src', "img/play bar/pause_L.png");
+           }else {
+               audio.pause();
+               $("#btn_play").attr('src', "img/play bar/play_L.png");
+
+                          }
+           //$("btn_play_"+audio_num).attr("src","img/play bar/stop_L.png");
+            
+        }
+        function get_image(){
+                  $.get( "http://selfie.gutschat.com/api/photo",
+                  {
+                  id:img_id,
+                  device_type: device_type,
+                  device_id:device_id,
+                  access_token:accessToken
+                  
+                  },function(result){
+                  if(result&&result['id']){
+                    img_detail=result;
+                    get_user_image(img_detail['user']['id']);
+                    //--------------display the list-----------------
+                    
+                  }else {
+                   navigator.notification.alert('Fail to connect server', null, "");
+                  
+                    }
+                  
+                  /*if(result['success']){
+                   console.log('success');
+                   
+                   }else{
+                   navigator.notification.alert('The verification code is incorrect or expired. Please try again.', null, "");
+                   }*/
+                  }
+                  
+                  )
+                  .fail( function(xhr, textStatus, errorThrown) {
+                        console.log(xhr.responseText, null, "");
+                        //navigator.notification.alert('fail to connection server.', null, "");
+                        });
+
+        }
+        function get_user_image(user_id){
+                  $.get( "http://selfie.gutschat.com/api/photo/user",
+                  {
+                  limit:3,
+                  user_id:user_id,
+                  device_type: device_type,
+                  device_id:device_id,
+                  access_token:accessToken
+                  
+                  },function(result){
+                    //console.log(result);
+                  if(result&&result['data']){
+                    user_images=result['data'];
+                    //--------------display the list-----------------
+                    show_image();
+                  }else {
+                   navigator.notification.alert('Fail to connect server', null, "");
+                  
+                    }
+                  
+                  /*if(result['success']){
+                   console.log('success');
+                   
+                   }else{
+                   navigator.notification.alert('The verification code is incorrect or expired. Please try again.', null, "");
+                   }*/
+                  }
+                  
+                  )
+                  .fail( function(xhr, textStatus, errorThrown) {
+                        console.log(xhr.responseText, null, "");
+                        //navigator.notification.alert('fail to connection server.', null, "");
+                        });
+
+        }        
+        function getURLParameter(name) {
+            return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
+        }
+        /*function est_time(){
+             //medias.play();
+             // medias.stop();
+             //var length= medias.getDuration();
+             //alert(length);
+             var counter=0;
+             var timerDur = setInterval(function() {
+                                counter = counter + 100;
+                                if (counter > 1000) {
+                                    clearInterval(timerDur);
+                                        console.log('fail...');
+                                }
+                                medias.play();
+                                medias.stop();
+                                var dur = medias.getDuration();
+                                if (dur > 0) {
+                                    clearInterval(timerDur);
+                                        $('#slider').attr('max',dur);
+                                        console.log('succ...');
+                                }
+                            }, 100);
+        }
+        function play_slider(){
+            var slider_counter=0;
+            var slider_val=0;
+            var timerDur = setInterval(function() {
+                                       slider_counter +=  100;
+                                       if (slider_counter > 10000) {
+                                       console.log('fail...');
+                                       clearInterval(timerDur);
+                                       
+                                       }
+                        //console.log($('#slider').attr('max'));
+                                       
+                                       slider_val=parseFloat($('#slider').val())+0.1;
+                                       console.log(slider_val);
+                $('#slider').val(slider_val);
+                                       console.log('after'+$('#slider').val());
+                                       
+            }, 100);
+        }*/
+        function relative_time(time){
+            var datetime = new Date();
+            var cur_sec=datetime.getTime()/1000;
+            var difference = cur_sec - time;
+            
+            // Customize in your own language.
+            var periods = [ "sec", "min", "hour", "day", "week", "month", "year"];
+            var lengths = [ "60","60","24","7","4.35","12"];
+            var ending='';
+            if (difference > 0) { // this was in the past
+                ending = "ago";
+            }else {
+                return 'Just now';
+            }
+            for( var j=0; difference>=lengths[j] && j < 6; j++ )
+            difference /= lengths[j];
+            difference = Math.floor(difference);
+            if( difference != 1 ){
+                // Also change this if needed for an other language
+                periods[j]+= "s";
+            }
+            if(periods[j]=="sec"||periods[j]=="secs")
+            return 'Just now';
+            
+            var text = difference+' '+periods[j]+ ' '+ending;
+            return text;
+        }
+
+
+        function updateLike(img_id){
+            var count=$('#count_like'+img_id).html();
+
+            if($('#btn_like'+img_id).attr('src')=='img/like_L.png'){
+                $('#btn_like'+img_id).hide(0).attr('src','img/liked_L.png').show(0);
+                $('#count_like'+img_id).html(++count);
+                 like_img_post(img_id,'like');
+
+            }else{
+                $('#btn_like'+img_id).hide(0).attr('src','img/like_L.png').show(0);
+                $('#count_like'+img_id).html(--count);
+                like_img_post(img_id,'unlike');
+
+            }
+        }
+        function like_img_post(img_id,link){
+            var  url="http://selfie.gutschat.com/api/photo/"+link;
+            $.post( url,
+                  {
+                  photo_id:img_id,
+                  device_type: device_type,
+                  device_id:device_id,
+                  access_token:accessToken
+                  
+                  },function(result){
+
+                  if(result&&result['success']){
+                    console.log('succ');
+                  }
+                  
+                  /*if(result['success']){
+                   console.log('success');
+                   
+                   }else{
+                   navigator.notification.alert('The verification code is incorrect or expired. Please try again.', null, "");
+                   }*/
+                  }
+                  
+                  )
+                  .fail( function(xhr, textStatus, errorThrown) {
+                        console.log(xhr.responseText, null, "");
+                        //navigator.notification.alert('fail to connection server.', null, "");
+                        });
+                        
+        }
+        function view_profile () {
+          window.localStorage.setItem('profile_info',JSON.stringify(img_detail['user']));
+          window.location='profile_push.html';
+
+        }
+        function get_detail(image_id){
+            window.location='home_detail.html?img_id='+image_id;
+            
+        }
+
+         function shareSocialSheet(link) {
+            var split_array=link.split('!!!!!!');
+            if(split_array.length==1){
+                clicked_share_link=split_array[0];
+                clicked_share_img='';
+            }else {
+                clicked_share_link=split_array[0];
+                clicked_share_img=split_array[1];
+            }
+            var options = {
+                //'title': 'What do you want with this image?',
+                'buttonLabels': [ 'Whatsapp', 'Line', 'Wechat','Instagram','Facebook',],
+                //'androidEnableCancelButton' : true, // default false
+                'addCancelButtonWithLabel': 'Cancel',
+            };
+            
+            window.plugins.actionsheet.show(options, shareSocial);
+        };
+        var shareSocial = function(buttonIndex) {
+            //setTimeout(function() {
+            // like other Cordova plugins (prompt, confirm) the buttonIndex is 1-based (first button is index 1)
+            //alert('button index clicked: ' + buttonIndex);
+            //    });
+            if(buttonIndex==1){
+                //whatsapp
+                console.log('whatsapp');
+                if(clicked_share_img==''){
+                    window.plugins.socialsharing.shareViaWhatsApp(null, null /* img */, clicked_share_link, function() {console.log('share ok')}, function(errormsg){alert(errormsg)});
+                }else {
+                    window.plugins.socialsharing.shareViaWhatsApp(null,  clicked_share_img/* img */,null , function() {console.log('share ok')}, function(errormsg){alert(errormsg)})
+                    
+                }
+                
+               
+            }else if(buttonIndex==2){
+                //line
+                console.log('line');
+                window.plugins.socialsharing.share(null, null, 'https://www.google.nl/images/srpr/logo4w.png', null);
+            }else if(buttonIndex==3){
+                //wechat
+                console.log('wechat');
+                if(clicked_share_img==''){
+                    console.log('share link');
+                    Wechat.share({
+                                 message: {
+                                 title: "",
+                                 description: "",
+                                 mediaTagName: "",
+                                 thumb: clicked_share_img,
+                                 media: {
+                                 type: Wechat.Type.WEBPAGE,   // webpage
+                                 webpageUrl: clicked_share_link    // webpage
+                                 }
+                                 },
+                                 scene: Wechat.Scene.TIMELINE   // share to Timeline
+                                 }, function () {
+                                 console.log("Success");
+                                 }, function (reason) {
+                                 console.log("Failed: " + reason);
+                                 });
+                }else {
+                    console.log('share image');
+
+                    Wechat.share({
+                                 message: {
+                                 title: "",
+                                 description: "",
+                                 mediaTagName: "",
+                                 thumb: '',
+                                 media: {
+                                 type: Wechat.Type.WEBPAGE,   // webpage
+                                 webpageUrl: clicked_share_link    // webpage
+                                 }
+                                 },
+                                 scene: Wechat.Scene.TIMELINE   // share to Timeline
+                                 }, function () {
+                                 console.log("Success");
+                                 }, function (reason) {
+                                 console.log("Failed: " + reason);
+                                 });
+                    
+                }
+
+
+
+            }else if(buttonIndex==4){
+                console.log('instagram');
+                share_twitter();
+            }else if(buttonIndex==5){
+                console.log('facebook');
+                share_fb();
+            }
+            
+        };
+
+        function share_fb() {
+            facebookConnectPlugin.showDialog( { method: "feed",link:clicked_share_link},
+                                             function (response) { console.log(JSON.stringify(response)) },
+                                             function (response) { console.log(JSON.stringify(response)) });
+        }
+        </script>
+    </body>
+</html>

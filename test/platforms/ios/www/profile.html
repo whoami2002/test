@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+ 
+ http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ -->
+<html>
+    <head>
+        
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/profile.css" />
+        <link rel="stylesheet" type="text/css" href="css/layout.css" />
+        <title>Hello World</title>
+    </head>
+    <body>
+        <div >
+            <div class='status_bar'></div>
+            <!--            <audio src='http://audio.ibeat.org/content/p1rj1s/p1rj1s_-_rockGuitar.mp3' id='sound'></audio>-->
+            <div class='nav_bar'><div class='nav_left' >&nbsp; </div><div class='nav_title'>Profile</div><div class='nav_right'><img src='img/setting_L.png' id='right_icon' class='right_icon' onclick='show_setting()'><div id='btn_done' onclick='stop_del();' style='display:none'>Done</div></div></div>
+        </div>
+        
+        <!----------User area--------------------->
+        <div id='user_row' class='user_row' >
+            
+            
+        </div>
+        
+        <!------------content area---------------->
+        <div id='view' class='view' >
+            
+            
+        </div>
+        <div class='tabbar' id='tabbar'><div class='tabbar_item'><img src='img/tab bar/tab home grey L.png' width='20%' onclick=" window.location='home.html';"></div><div class='tabbar_item'><img onclick=" window.location='popular.html';" src='img/tab bar/tab popular grey L.png' width='20%'></div><div class='tabbar_item'><img src='img/tab bar/tab camera grey L.png' width='20%' onclick=" postShareSheet() "></div><div class='tabbar_item'><img src='img/tab bar/tab notif grey L.png' width='20%' onclick=" window.location='notify.html';"></div><div class='tabbar_item'><img src='img/tab bar/tab profile blue L.png' width='20%' ></div></div>
+        </div>
+        <div class='tabbar' style='background-color:white;display:none;' id='tabbar_del' ><div class='tabbar_item' style='float:right;'><img src='img/trash.png'  onclick=" del_image()"></div></div>
+
+        </div>
+            <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
+            <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+            <script type="text/javascript" language="JavaScript">
+            //------------variables-------
+            var img_array=[];
+            var month_array={};
+            var page_array={};
+            var accessToken='';
+            var device_id='F1BEAC93-C8DA-4B41-911B-3F5A30FB7274';
+            var device_type= 'ios';
+            var user_array={};
+            var user_id='';
+            var del_mode=0;
+            var del_array=[];
+            //---------------------------
+            document.addEventListener("deviceready", onDeviceReady, true);
+            function onDeviceReady() {
+                user_array= JSON.parse(window.localStorage.getItem('user'));
+                accessToken=window.localStorage.getItem('accessToken');
+
+                user_id=user_array['id'];
+                get_images();
+               show_user();
+            }
+            //ActivityIndicator.show('Loading');
+            
+            function show_setting(){
+                window.location='setting.html';
+            }
+        
+            function show_user(){
+
+                var user_info="";
+                var user_img=user_array['avatar']==''?'img/default-profile-pic_120.png':user_array['avatar'];
+
+                user_info="<div class='user_row'>"; //the row of user info
+                user_info+="<div style='display:inline-block;float:left;height:80px;'><img class='user_icon' src='"+user_img+"'></div>";
+                user_info+="<div class='user_name'>"+user_array['name']+"</div>  ";
+                user_info+="</div>";
+                //$('#user_row').html(user_info);
+                document.getElementById('user_row').innerHTML =user_info;
+
+
+            }
+         
+        function get_list(){
+            //var count=img_array.length;
+            var month_count=Object.keys(month_array).length;
+            var image_url='';
+            var all_list='';
+
+            /*for(var x=0;x<month_count;x++){
+                
+                all_list+="<div class='txt_month'>August 2014</div>";
+                var list="<table  cellpadding='0' cellspacing='0'><tbody>";
+
+                
+
+
+                for(var i=0;i<month_array[x].length;i++){
+                    image_url=month_array[x][i]['picture'];
+                    if(i%3==0){
+                        list+='<tr><td><img class="preview" style="background-image: url('+image_url+') " onclick="get_detail('+month_array[x][i]['id']+')"></td>';
+                        if(i==count-1){
+                            list+='</tr>';
+                        }
+                    }else if(i%3==1){
+                        list+='<td><img class="preview" style="background-image: url('+image_url+') " onclick="get_detail('+month_array[x][i]['id']+')"></td>';
+                        if(i==count-1){
+                            list+='</tr>';
+                        }
+                    }else {
+                        list+='<td><img class="preview"  style="background-image: url('+image_url+') onclick="get_detail('+month_array[x][i]['id']+')"></td></tr>';
+                    }
+                    
+                }
+                list+="</tbody></table>";
+                all_list+=list;
+            }*/
+
+            jQuery.each( month_array, function( month, month_img ) {
+                all_list+="<div class='txt_month'>"+month+"</div>";
+                var list="<table  cellpadding='0' cellspacing='0'><tbody>";
+
+                
+
+
+                for(var i=0;i<month_img.length;i++){
+                    image_url=month_img[i]['picture'];
+                    if(i%3==0){
+                        list+='<tr><td><div class="td_wrapper"><img  id="img_'+month_img[i]['id']+'" class="preview" style="background-image: url('+image_url+') " onclick="toogle_detail('+month_img[i]['id']+')"><img id="tick_'+month_img[i]['id']+'" class="img_tick"  src="img/tick.png" ></div></td>';
+                        if(i==month_img.length-1){
+                            list+='</tr>';
+                        }
+                    }else if(i%3==1){
+                        list+='<td><div  class="td_wrapper"><img id="img_'+month_img[i]['id']+'" class="preview" style="background-image: url('+image_url+') " onclick="toogle_detail('+month_img[i]['id']+')"><img id="tick_'+month_img[i]['id']+'" class="img_tick" src="img/tick.png" ></div></td>';
+                        if(i==month_img.length-1){
+                            list+='</tr>';
+                        }
+                    }else {
+                        list+='<td><div class="td_wrapper"><img id="img_'+month_img[i]['id']+'" class="preview"  style="background-image: url('+image_url+')" onclick="toogle_detail('+month_img[i]['id']+')"><img  id="tick_'+month_img[i]['id']+'" class="img_tick" src="img/tick.png" ></div></td></tr>';
+                    }
+                    
+                }
+                list+="</tbody></table>";
+                all_list+=list;
+                });
+
+            document.getElementById("view").innerHTML=all_list;
+
+            $('.preview').on( "touchend", toogle_del_img);
+
+        }
+        var toogle_del_img = function() {
+            console.log('end');
+            if(!del_mode){
+                $('#tabbar').css( "display", "none" );
+                $('#tabbar_del').css( "display", "block" );
+                $('#btn_done').css('display','block');
+                $('#right_icon').css('display','none');
+                del_mode=1;
+            }
+           
+        };
+        function stop_del(){
+            $('#btn_done').css('display','none');
+            $('#right_icon').css('display','block');
+             $('#tabbar').css( "display", "block" );
+                $('#tabbar_del').css( "display", "none" );
+                $('.img_tick').css('display','none');
+
+            del_mode=0;
+        }  
+        function toogle_detail(image_id){
+            console.log('click');
+            if(del_mode){
+                var index=del_array.indexOf(image_id);
+                if (index==-1){
+                    del_array.push(image_id);
+                    $('#tick_'+image_id).css('display','block');
+                }
+                else{
+                    del_array.splice(index, 1);;
+                    $('#tick_'+image_id).css('display','none');
+                } 
+                console.log(del_array);
+            }else 
+             get_detail(image_id);
+        }
+        function get_detail(image_id){
+            window.location='home_detail.html?img_id='+image_id;
+            
+        }
+
+        function postShareSheet() {
+            var options = {
+                    //'title': 'What do you want with this image?',
+                    'buttonLabels': ['Take Photo','Select from camera roll', 'Select from album'],
+                    //'androidEnableCancelButton' : true, // default false
+                    'addCancelButtonWithLabel': 'Cancel',
+                };
+                
+                window.plugins.actionsheet.show(options, callback);
+            };
+            
+         var callback = function(buttonIndex) {
+            //setTimeout(function() {
+            // like other Cordova plugins (prompt, confirm) the buttonIndex is 1-based (first button is index 1)
+            //alert('button index clicked: ' + buttonIndex);
+            //    });
+            if(buttonIndex==1){
+                window.location='upload.html?source=1';
+            }else if(buttonIndex==2){
+                window.location='upload.html?source=2';
+            }else if(buttonIndex==3){
+                window.location='upload.html?source=3';
+            }
+            
+        };
+         function get_images(){
+
+            $.get( "http://selfie.gutschat.com/api/photo/user",
+                  {
+                  user_id:user_id,
+                  device_type: device_type,
+                  device_id:device_id,
+                  access_token:accessToken
+                  
+                  },function(result){
+                      if(result&&result['pagination']){
+                        page_array=result['pagination'];
+                        if(page_array['total']==0 && !del_mode){
+                            var hint='';
+                            hint+='<div style="margin-top:60px;font-size:14px;color:#969696;text-align:center;">Your uploaded images will be displayed here.</div>';
+                            hint+='<div style="position: absolute;  bottom: 0;    width: 100%;    height: 115px;    text-align: center;    background-color: #B5D6EB;">';
+                            hint+='<div style="margin-top: 42px;font-size: 16px;">Click the camera to upload your first image.</div>  ';
+                            hint+=' <div><img src="img/arrow-down-72.png" width="24px" style="    margin-top: 10px;"></div>';
+                            hint+='</div>';
+                            $('#view').html(hint);
+                        }else if(page_array['total']==0 && del_mode){
+                            $('#view').html('');
+                        }else {
+                            month_array={};
+                            img_array=result['data'];  
+                            split_array();  
+                            //get_list();
+                        }
+
+                      
+                      //--------------display the list-----------------
+                      }else {
+                      // navigator.notification.alert('No Image', null, "");
+                      
+                      }
+                  
+             
+                  }
+                  
+                  )
+                  .fail( function(xhr, textStatus, errorThrown) {
+                        console.log(xhr.responseText, null, "");
+                        //navigator.notification.alert('fail to connection server.', null, "");
+                        });
+                        
+        }
+
+        function split_array(){
+            for (var i = 0; i <img_array.length; i++) {
+                var date=new Date(1000*img_array[i]['createdAt']);
+                
+                var index_month=date.getMonth()+'-'+date.getFullYear();
+                if(month_array[index_month]){
+
+                    month_array[index_month].push(img_array[i]);
+                }
+                else {
+
+                    var arr=[img_array[i]];
+                    month_array[index_month]=arr;
+                }
+            };
+            get_list();
+        }
+
+        function del_image(){
+            console.log(del_array);
+            if(del_array.length==0)
+                return;
+            else {
+                console.log('post');
+                var str_img_id='';
+                for (var i = 0 ;i < del_array.length ; i++) {
+                    str_img_id+=del_array[i];
+                    if(i!=del_array.length-1)
+                        str_img_id+=',';    
+                };
+                console.log(str_img_id);
+                   $.post( "http://selfie.gutschat.com/api/photo/delete",
+                  {
+                
+                  ids:str_img_id,
+                  device_type: device_type,
+                  device_id:device_id,
+                  access_token:accessToken
+                  
+                  },function(result){
+                        console.log('finish');
+                       console.log(result);
+                       if(result&&result['success'])//successfully delete images and refresh
+                        get_images()
+               
+                  }
+                  
+                  )
+                  .fail( function(xhr, textStatus, errorThrown) {
+                        console.log(xhr.responseText, null, "");
+                        //navigator.notification.alert('fail to connection server.', null, "");
+                        });
+            }
+        }
+        </script>
+    </body>
+</html>

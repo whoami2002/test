@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+ 
+ http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ -->
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/email_signup.css" />
+        <link rel="stylesheet" type="text/css" href="css/layout.css" />
+        <title>Hello World</title>
+    </head>
+    
+        <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
+        <script src="cordova.js" type="text/javascript" charset="utf-8" ></script>
+
+        <script type="text/javascript" language="JavaScript" charset="utf-8">
+            
+            function onLoad() {
+                document.addEventListener("deviceready", onDeviceReady, false);
+            }
+            function onDeviceReady() {
+                //alert(device.uuid);
+
+                //navigator.notification.alert("PhoneGap is working", function(){}, "", "");
+            }
+            function back(){
+                window.history.back();
+            }
+            function check_pw(){
+                var str_email= $('#email').val();
+                var str_user= $('#username').val();
+                var str_pw= $('#pwd').val();
+
+                if($.trim(str_email)==''){
+                    navigator.notification.alert('Please provide your email address.', null, "Error");
+
+                }else if(!validateEmail(str_email)){
+                    navigator.notification.alert('Please enter a valid email address.', null, "Error");
+
+                }else if(str_user.length<3||str_user.length>20){
+                    navigator.notification.alert('Please choose a user name between 3-20 characters.', null, "Error");
+
+                }else if(str_pw.length<6||str_pw.length>20){
+                    navigator.notification.alert('Please choose a password between 6-20 characters.', null, "Error");
+
+                }else if($('#pwd').val()==$('#re_pwd').val()){
+                    return true;
+
+                }else {
+                    navigator.notification.alert('The two passwords do not match. Please try again.', null, "Error");
+
+                }
+                return false;
+            }
+        
+            function validate(){
+                if(check_pw()){
+                 $.post( "http://selfie.gutschat.com/api/email/validate",
+                   { 
+                    email: $('#email').val(),
+                    device_type: 'ios',
+                    device_id:'F1BEAC93-C8DA-4B41-911B-3F5A30FB7274'
+                    
+                   } 
+                   ,function(result){
+                    console.log(result);
+                        if(result&&result['success']){
+                            send_code($('#email').val());
+                        }else {
+                            navigator.notification.alert('The email address is already registered. Please provide a new email or login with that email.', null, "Error");
+
+                        }
+                    })
+                    .fail( function(xhr, textStatus, errorThrown) {
+                          console.log(xhr.responseText, null, "");
+                          navigator.notification.alert('The email address is already registered. Please provide a new email or login with that email.', null, "Error");
+                    });
+                }
+            }
+        
+            function send_code(email){
+                $.post( "http://selfie.gutschat.com/api/email/sendcode",
+                       {
+                       email: $('#email').val(),
+                       device_type: 'ios',
+                       device_id:'F1BEAC93-C8DA-4B41-911B-3F5A30FB7274'
+                       
+                       }
+                       ,function(result){
+                       if(result['success']){
+                            var account_info = {};
+                            account_info["email"] = $('#email').val();
+                            account_info["pwd"] = $('#pwd').val();
+                            account_info["username"] = $('#username').val();
+                            window.localStorage.setItem('account_info',JSON.stringify(account_info));
+                       
+                            navigator.notification.alert('Verification Code has been sent.', verify, "");
+                       }else {
+                        navigator.notification.alert('Fail to send verification code. Please try again later.', null, "Error");
+                       
+                       }
+                    });
+            }
+            function verify(){
+                window.location='verify_mail.html';
+            }
+
+
+            function validateEmail(email) { 
+                var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                return re.test(email);
+            } 
+            </script>
+        <body onload="onLoad()">
+            <div >
+                <div class='status_bar'></div>
+                <div class='nav_bar'><div class='nav_left' ><img class="left_icon" src='img/arrow-left-72.png' onclick="back()"></div><div class='nav_title'>Welcome</div></div>
+                
+                <!------------content area---------------->
+                <div>
+                    
+                    <input type='text' id='username' class='username' value='' placeholder='Username'>
+                    <input type='text' id='email' class='email' value='' placeholder='Email address'>
+                    <input type='text' id='pwd' class='email' value='' type='password' placeholder='Password'>
+                    <input type='text' id='re_pwd' class='re_pwd' value='' type='password' placeholder='Re-enter password'>
+                                    
+                    <button class='btn_done' onclick='validate()'>Sign up now</button>
+                </div>
+                <div class='terms'>
+                    By using the application,<br> you accept and agree to these <a href='#' onclick="window.location='terms.html';">terms and conditions.</a>
+                </div>
+            </div>
+        </body>
+</html>

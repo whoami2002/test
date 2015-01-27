@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/verify_mail.css" />
+        <link rel="stylesheet" type="text/css" href="css/layout.css" />
+        <title>Hello World</title>
+    </head>
+    <body>
+        <div class='status_bar'></div>
+        <div class='nav_bar'><div class='nav_left' ><img class="left_icon" src='img/arrow-left-45.png' > </div><div class='nav_title'>Welcome</div></div>
+        
+        <!------------content area---------------->
+        
+        <div style='margin-top:30px;width:100%;'>
+           <div style='text-align:center;font-size:15px;color:#404040;'>
+               The verification code have been <br>sent to your email:<br><br>
+               <div id='verify_mail'>mail@gmail.com</div>
+           </div>
+           <input type='text' id='verify_code' class='verify_code' placeholder='Enter the verification code'>
+            <button class='btn_verify' onclick="register()">Verify</button>
+            <div style='text-align:left;font-size:13px;color:#999999;margin-top:30px;margin-left:10px;'>
+                Please check your junk or spam folder if you didn't receive the activation code; or
+            </div>
+             <button class='btn_resend' onclick="resend()">click to resend code</button>
+             <div class='terms'>
+                 By using the application,<br> you accept and agree to these <a href='#' onclick="window.location='terms.html';">terms and conditions.</a>
+             </div>
+        </div>
+        <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
+        <script src="cordova.js" type="text/javascript" charset="utf-8" ></script>
+        <script type="text/javascript" language="JavaScript">
+            var ac='';
+            var pw='';
+            var email='';
+            
+            document.addEventListener("deviceready", onDeviceReady, false);
+            
+            function onDeviceReady() {
+                var info = JSON.parse(window.localStorage.getItem('account_info'));
+                console.log(info);
+                email=info["email"] ;
+                pw=info["pwd"];
+                ac=info["username"] ;
+                $('#verify_mail').html(email);
+            }
+            
+            function register(){
+                    $.post( "http://selfie.gutschat.com/api/register",
+                           {
+                           name: ac,
+                           email: email,
+                           password: pw,
+                           code: $('#verify_code').val(),
+                           device_type: 'ios',
+                           device_id:'F1BEAC93-C8DA-4B41-911B-3F5A30FB7274'
+
+                           },function(result){
+                           console.log(result);
+                              if(result['accessToken']){
+                                window.localStorage.setItem('accessToken',result['accessToken']);
+                                window.localStorage.setItem('user',JSON.stringify(result['user']));
+                                  navigator.notification.alert('Registration success', go_to_home, "");
+
+                              }else{
+                                navigator.notification.alert('The verification code is incorrect or expired. Please try again.', null, "Error");
+                              }
+
+
+                           })
+                        .fail( function(xhr, textStatus, errorThrown) {
+                              console.log(xhr.responseText, null, "");
+                              navigator.notification.alert('The verification code is incorrect or expired. Please try again.', null, "Error");
+
+                                  }
+                              );
+
+                        
+            }
+        
+            function resend() {
+                $.post( "http://selfie.gutschat.com/api/email/sendcode",
+                           {
+                           email: email,
+                           device_type: 'ios',
+                           device_id:'F1BEAC93-C8DA-4B41-911B-3F5A30FB7274'
+
+                           },function(result){
+                              if(result['success']){
+                                  navigator.notification.alert('Code has been sent again.', null, "");
+
+                              }else{
+                                    navigator.notification.alert('Fail to resend the code.', null, "Error");
+                              }
+
+                 });
+            }
+            
+            function go_to_home(){
+                window.location='fb_login.html';
+            }
+            function back(){
+                window.history.back();
+            }
+        </script>
+    </body>
+</html>

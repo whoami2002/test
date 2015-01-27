@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/fb_login.css" />
+        <link rel="stylesheet" type="text/css" href="css/layout.css" />
+
+        <title>Hello World</title>
+    </head>
+    <body>
+        <div >
+            <div class='status_bar'></div>
+            <div class='nav_bar'><div class='nav_left' >&nbsp;</div><div class='nav_title'>Welcome</div></div>
+            
+            <!------------content area---------------->
+            <div>
+                <img id='avatar' class='circular' src='img/default-profile-pic_120.png' onclick='edit()'>
+
+                
+                <div  class='btn_edit' onclick='edit()'>Edit</div>
+                <input type='text' id='username'    class='username' placeholder='Username'>
+                <button class='btn_done' onclick='submit()'>Done</button>
+            </div>
+            <div class='terms'>
+                By using the application,<br> you accept and agree to these <a href='#' onclick="window.location='terms.html';">terms and conditions.</a>
+            </div>
+        </div>
+        <script type="text/javascript" src="js/jquery-2.1.1.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+        <script type="text/javascript" language="JavaScript">
+            
+        var name='';
+        var pictureSource;   // picture source
+        var destinationType; // sets the format of returned value
+        var image_URI='';
+        document.addEventListener("deviceready", onDeviceReady, false);
+        function onDeviceReady() {
+            pictureSource=navigator.camera.PictureSourceType;
+            destinationType=navigator.camera.DestinationType;
+            var info = JSON.parse(window.localStorage.getItem('account_info'));
+            name=info["username"] ;
+            $('#username').val(name);
+            var fb_login_id= window.localStorage.getItem('fb_id');
+
+            if(fb_login_id){
+                console.log('1111111111');
+                info = JSON.parse(window.localStorage.getItem('account_info'));
+                name=info["name"] ;
+                $('#username').val(name);
+
+                //document.getElementById('avatar').src='https://graph.facebook.com/'+fb_login_id+'/picture';
+                downloadFile(fb_login_id);    
+                console.log('222222222');
+
+            }
+            image_URI='img/default-profile-pic_120.png';
+                
+
+        }
+        function back(){
+            window.history.back();
+        }
+         var succ_fb_profile = function(r) {
+            console.log(r);
+
+        }
+        var fail_fb_profile = function(r) {
+            console.log(r);
+        
+        }
+       
+        
+        // Called when a photo is successfully retrieved
+        //
+        function onPhotoDataSuccess(imageData) {
+            // Uncomment to view the base64 encoded image data
+            console.log(imageData);
+            console.log('take photo');
+            
+            // document.getElementById('selected_img').src = "data:image/jpeg;base64," + imageData;
+            document.getElementById('avatar').src=imageData;
+            image_URI=imageData;
+        }
+        
+        // Called when a photo is successfully retrieved
+        //
+        function onPhotoURISuccess(imageURI) {
+            // Uncomment to view the image file URI
+            //
+            var largeImage = document.getElementById('avatar');
+            console.log(imageURI);
+            image_URI=imageURI;
+            document.getElementById('avatar').src=imageURI;
+            
+           
+
+        }
+        
+        // A button will call this function
+        //
+        function capturePhoto() {
+            // Take picture using device camera and retrieve image as base64-encoded string
+            navigator.camera.getPicture(onPhotoDataSuccess, onFail, { quality: 50,correctOrientation:true });
+        }
+        
+        // A button will call this function
+        //
+        function capturePhotoEdit() {
+            // Take picture using device camera, allow edit, and retrieve image as base64-encoded string
+            navigator.camera.getPicture(onPhotoDataSuccess, onFail, { quality: 20, allowEdit: true });
+        }
+        
+        // A button will call this function
+        //
+        function getPhoto(source) {
+            // Retrieve image file location from specified source
+            navigator.camera.getPicture(onPhotoURISuccess, onFail, { quality: 50,
+                                        destinationType: destinationType.FILE_URI,
+                                        sourceType: source });
+        }
+        var callback = function(buttonIndex) {
+            //setTimeout(function() {
+            // like other Cordova plugins (prompt, confirm) the buttonIndex is 1-based (first button is index 1)
+            //alert('button index clicked: ' + buttonIndex);
+            //    });
+            if(buttonIndex==1){
+                capturePhoto();
+            }else if(buttonIndex==2){
+                getPhoto(pictureSource.SAVEDPHOTOALBUM);
+                
+            }else if(buttonIndex==3){
+                getPhoto(pictureSource.PHOTOLIBRARY);
+                
+            }
+        };
+        
+        function onFail(message) {
+        }
+        
+        function edit() {
+            var options = {
+                //'title': 'What do you want with this image?',
+                'buttonLabels': ['Take Photo','Select from camera roll', 'Select from album'],
+                //'androidEnableCancelButton' : true, // default false
+                'addCancelButtonWithLabel': 'Cancel',
+            };
+            
+            window.plugins.actionsheet.show(options, callback);
+        };
+        function submit() {
+            if($.trim($('#username').val()).length>20||$.trim($('#username').val()).length<3){
+                navigator.notification.alert('Please choose a user name between 3-20 characters.', null, "");
+            }else {
+                var options = new FileUploadOptions();
+                options.fileKey="avatar";
+                options.fileName="ava";
+                options.mimeType="image/jpg";
+            
+                var params = {};
+                params.name = $.trim($('#username').val());
+                params.device_type = 'ios';
+                params.device_id ='F1BEAC93-C8DA-4B41-911B-3F5A30FB7274';
+                params.access_token=window.localStorage.getItem('accessToken');
+
+                options.params = params;
+            
+                var ft = new FileTransfer();
+                ft.upload(image_URI, encodeURI("http://selfie.gutschat.com/api/user/update"), succ, fail, options);
+            }
+        }
+        var succ = function(r) {
+            console.log("Code = " + r.responseCode);
+            console.log("Response = " + r.response);
+            console.log("Sent = " + r.bytesSent);
+            window.location='home.html';
+        }
+        
+        var fail = function(error) {
+            alert("An error has occurred: Code = " + error.code);
+            console.log("upload error source " + error.source);
+            console.log("upload error target " + error.target);
+        }
+
+         function downloadFile(fb_id){
+        window.requestFileSystem(
+                     LocalFileSystem.PERSISTENT, 0, 
+                     function onFileSystemSuccess(fileSystem) {
+                     fileSystem.root.getFile(
+                                 fb_id+".jpg", {create: true, exclusive: false}, 
+                                 function gotFileEntry(fileEntry){
+                                 var sPath = fileEntry.toURL();
+                                 var fileTransfer = new FileTransfer();
+                                 //fileEntry.remove();
+ 
+                                 fileTransfer.download(
+                                           'https://graph.facebook.com/'+fb_id+'/picture?type=large',
+                                           sPath ,
+                                           function(theFile) {
+                                           console.log("download complete: " + theFile.toURL());
+                                           document.getElementById('avatar').src=theFile.toURL();
+                                            image_URI=theFile.toURL();
+                                           },
+                                           function(error) {
+                                           console.log("download error source " + error.source);
+                                           console.log("download error target " + error.target);
+                                           console.log("upload error code: " + error.code);
+                                           }
+                                           );
+                                 }, 
+                                 fail);
+                     }, 
+                     fail);
+ 
+     }
+        function fail(evt) {
+            console.log(evt.target.error.code);
+        }
+ 
+
+
+        </script>
+    </body>
+</html>

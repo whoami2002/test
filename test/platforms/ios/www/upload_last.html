@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+ 
+ http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ -->
+<html>
+    <head>
+        
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/upload_last.css" />
+        <link rel="stylesheet" type="text/css" href="css/layout.css" />
+        <title>Hello World</title>
+    </head>
+    <body>
+        <div >
+            <div class='status_bar'></div>
+            <div class='nav_bar'><div class='nav_left'><div id='btn_back' onclick='back()'> Back</div></div><div class='nav_title'>Upload</div><div class='nav_right'><div id='btn_next' onclick='upload()'> Finish</div></div></div></div>
+        
+        
+        <!------------content area---------------->
+        <div id='view' class='view' >
+            <div style='text-align:center'>
+                <img id='sel_img' class='img_list'  src=''>
+            </div>
+            
+            <div class='play_bar' id='play_bar'>
+                    <div class='play_button'><img id='btn_play'  src='img/play bar/play_L.png' class='play_icon' onclick='play_record()'>
+                    </div>
+                   
+            </div>
+          
+          <div id='suggestion' class='suggestion'>Also share on:</div>
+            <div class='share_method right_border top_border' onclick='toogle_share_fb()'>
+                <div style='display:inline-block;float:left;height:40px;' ><img id='fb_share_icon' class='share_icon' src='img/SNS/facebook-grey_L.png'></div><div id='fb_share_name' class='share_name'>Facebook</div>
+            </div>
+            <div class='share_method right_border top_border' onclick='toogle_share_tw()'>
+               <div style='display:inline-block;float:left;height:40px;' ><img id='tw_share_icon' class='share_icon' src='img/SNS/twitter-grey_L.png'></div><div id='tw_share_name' class='share_name'>Twitter</div>
+            </div>
+            <!--<div class='share_method top_border'>
+                <div style='display:inline-block;float:left;height:40px;'><img class='share_icon' src='img/SNS/tumblr-grey_L.png'></div><div class='share_name'>Tumblr</div>
+            </div>
+            <div class='share_method right_border'>
+                <div style='display:inline-block;float:left;height:40px;'><img class='share_icon' src='img/SNS/flickr-grey_L.png'></div><div class='share_name'>Flickr</div>
+            </div>
+            
+            <div class='share_method right_border '>
+                <div style='display:inline-block;float:left;height:40px;'><img class='share_icon' src='img/SNS/instagram-grey_L.png'></div><div class='share_name'>Instagram</div>
+            </div>-->
+
+        </div>
+        <div class='tabbar'><div class='tabbar_item'><img src='img/tab bar/tab home grey L.png' width='20%' onclick=" window.location='home.html';"></div><div class='tabbar_item'><img src='img/tab bar/tab popular grey L.png' width='20%'></div><div class='tabbar_item'><img src='img/tab bar/tab camera blue L.png' width='20%' onclick=" testShareSheet() "></div><div class='tabbar_item'><img src='img/tab bar/tab notif grey L.png' width='20%' onclick=" window.location='notify.html';"></div><div class='tabbar_item'><img src='img/tab bar/tab profile grey L.png' width='20%' onclick=" window.location='profile.html';"></div></div>
+        </div>
+
+        <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+        <script type="text/javascript" language="JavaScript">
+           //------------variables-------
+            var voice;
+            var accessToken='';
+            var device_id='F1BEAC93-C8DA-4B41-911B-3F5A30FB7274';
+            var device_type= 'ios';
+            var has_audio=0;
+            var recordFileName = "recording.wav";
+            var full_name='';
+            var share_fb=0;
+            var share_tw=0;
+            //---------------------------
+        
+        function onStatusChange()
+        {
+            if (arguments[0] == 4) //play stopped
+            {
+                document.getElementById('btn_play').src='img/record sound/play_L.png';
+
+            }
+        }
+        
+        function onError(err)
+        {
+            
+            if(err.code==1){
+                navigator.notification.alert("To record a voice message, please go to your phone's privacy setting. Tap Microphone and turn on it.", null, "Please Allow Microphone Access");
+            }else
+            
+            if (typeof err.message != 'undefined'){
+                err = "Media error: " + err.message + "(" + err.code + ")";
+
+                navigator.notification.alert(err, null, "Error");
+            }
+           
+            //alert("Error : " + err);
+        }
+
+
+        function play_record(){
+            
+            if(has_audio==1){
+                console.log('play');
+                document.getElementById('btn_play').src='img/play bar/pause_L.png';
+                voice.play();
+                
+
+            }else {
+                console.log('no audio');
+            }
+        }
+        
+        document.addEventListener("deviceready", onDeviceReady, true);
+        //------------------- Ready  -----------------------
+            function onDeviceReady() {
+
+                accessToken=window.localStorage.getItem('accessToken');
+                has_audio=window.localStorage.getItem('has_audio');
+                 //voice = window.localStorage.getItem("recorded_voice");
+                 //voice= new Media('recording.wav', function(){console.log("Media created successfully");
+                 //                                                                     }, onError, onStatusChange); //of new Media
+                 if(has_audio==0){
+                     document.getElementById("play_bar").style.display='none';
+                 }else {
+                    console.log('create Media');
+                    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, function(fileSystem){
+                                         fileSystem.root.getFile(recordFileName, {
+                                                                 create: false,
+                                                                 exclusive: false
+                                                                 },
+                                                        function(fileEntry){
+                                                            full_name=fileEntry.toURL();
+                                                                 console.log("File " + recordFileName + " created at " + fileEntry.fullPath);
+                                                                 voice = new Media('recording.wav', function(){
+                                                                                      console.log("Media created successfully");
+                                                                                      }, onError, onStatusChange); //of new Media
+                                                                 
+                                                                 }, onError); //of getFile
+                                         }, onError); //of requestFileSystem
+                    console.log('create Media end...');
+
+                 }
+                var image = window.localStorage.getItem("selected_img");
+                document.getElementById("sel_img").src=image;
+                //alert(image);
+
+            }
+        function onStatusChange()
+        {
+            if (arguments[0] == 4) //play stopped
+            {
+               console.log('play end ');
+                document.getElementById('btn_play').src='img/play bar/play_L.png';
+
+            }
+            //console.log(1111111);
+        }
+        
+        function next_record(){
+            window.location='setting.html';
+        }
+        
+        function back(){
+            window.history.back();
+        }
+        
+        function upload(){
+             ActivityIndicator.show('Uploading');
+            var image_url = window.localStorage.getItem("selected_img");
+
+              var options = new FileUploadOptions();
+                options.fileKey="picture";
+                options.fileName="selected.jpg";
+                options.mimeType="image/jpg";
+            
+                var params = {};
+                params.device_type = 'ios';
+                params.device_id =device_id;
+                params.access_token=accessToken;
+                options.params = params;
+            
+                var ft = new FileTransfer();
+                ft.upload(image_url, encodeURI("http://selfie.gutschat.com/api/photo/create"), succ, fail, options);
+
+
+            //console.log('removed image');
+            //window.localStorage.removeItem("selected_img");
+            //console.log(window.localStorage.getItem("selected_img"));
+            
+        }
+        
+         var succ = function(r) {
+            console.log("Code = " + r.responseCode);
+            console.log("Response = " + r.response);
+            console.log("Sent = " + r.bytesSent);
+             var ajax_response={};
+                ajax_response=JSON.parse(r.response);
+           
+           
+             if(has_audio==1){
+                console.log('upload audio')
+                if(share_fb){
+                    post_fb_wall(ajax_response['shareLink']);
+                }else {
+                    clear_and_back();
+                }
+               
+                //console.log(ajax_response['id'])
+                //upload_audio(ajax_response['id']);
+            }else{
+                if(share_fb){
+                    post_fb_wall(ajax_response['shareLink']);
+                }else {
+                    clear_and_back();
+                }
+               
+            }
+        }
+        
+        var fail = function(error) {
+             ActivityIndicator.hide();
+            console.log("An error has occurred: Code = " + error.code);
+            console.log("upload error source " + error.source);
+            console.log("upload error target " + error.target);
+        }
+
+        function post_fb_wall(clicked_share_link){
+            //console.log(clicked_share_link);
+            var fb_userID=window.localStorage.getItem('fb_id');
+            api_link='https://graph.facebook.com/'+fb_userID+'/feed?link='+clicked_share_link+'&access_token='+window.localStorage.getItem('fb_accessToken');
+            console.log(api_link);
+        $.post(api_link
+                   ,
+                   {
+                   //link:clicked_share_link,
+                   //access_token:window.localStorage.getItem('fb_accessToken')
+                   },function(result){
+                        console.log(result);
+                        console.log('succ');
+                        if(share_tw){
+                            // check_bearer();
+                            clear_and_back();
+                        }else {
+                            clear_and_back();
+                        }
+                    }
+                   
+                   )
+                   .fail( function(xhr, textStatus, errorThrown) {
+                         console.log(xhr.responseText, null, "");
+                         if(share_tw){
+                         // check_bearer();
+                         window.localStorage.removeItem('selected_img');
+                         window.localStorage.removeItem('recorded_voice');
+                         
+                         window.location='home.html';
+                         }
+
+                    });
+        }
+        function post_image_twitter(){
+            var image_url = window.localStorage.getItem("selected_img");
+            var bearer_token='Bearer '+btoa(window.localStorage.getItem("bearer_token"));
+            var consumer_key='wGNkN2GMUD1tFSqEAtazSl8F7';
+            var consumer_sec='PTzz1NZnHmzivoHgxVz89k4dagBAiqo2ukWYAqHUoj1T3edwob';
+            var access_token=window.localStorage.getItem('twitter_token');
+            var access_secret=window.localStorage.getItem('twitter_secret');
+            console.log(bearer_token);
+            
+             /* var options = new FileUploadOptions();
+                options.fileKey="media";
+                options.fileName="selected.jpg";
+                options.mimeType="image/jpg";
+                options.headers = {"Authorization":bearer_token,
+                    "Content-Type": 'multipart/form-data'};
+                var params = {
+                    oauth_consumer_key:consumer_key,
+                    oauth_consumer_secret:consumer_sec,
+                     oauth_token:access_token,
+                     oauth_token_secret:access_secret
+                };
+                options.params = params;
+                var ft = new FileTransfer();
+                ft.upload(image_url, encodeURI("https://upload.twitter.com/1.1/media/upload.json"),
+                    function(r){
+                        //succ function
+                          console.log('======================SUCC!!!!!!!======================');
+                        console.log(r);
+                    }, 
+                    function(r){
+                        //fail function
+                        console.log('fail');
+                        console.log(r);
+
+                    }, 
+
+                    options);*/
+            $.ajax({
+                   url: 'https://upload.twitter.com/1.1/media/upload.json',
+                   type: 'post',
+                   headers: {
+                   "Authorization": bearer_token,
+                   'Content-Type': 'multipart/form-data'
+                   },
+                   data:{
+                   media:encodeImageUri(image_url),
+                   oauth_consumer_key:consumer_key,
+                   oauth_consumer_secret:consumer_sec,
+                   oauth_token:access_token,
+                   oauth_token_secret:access_secret
+                   }
+                   })
+                   .complete(function( result ) {
+                             
+                             console.log(  result );
+                             if(result['statusText']=='OK'){
+                             //console.log(result['responseJSON']['access_token']);
+                             window.localStorage.setItem('bearer_token',result['responseJSON']['access_token']);
+                             post_image_twitter();
+                             }else {
+                             
+                             }
+                             });
+
+        }
+        function post_twitter(){
+            var tw_token = 'wGNkN2GMUD1tFSqEAtazSl8F7';
+            var tw_secret= 'PTzz1NZnHmzivoHgxVz89k4dagBAiqo2ukWYAqHUoj1T3edwob';
+            var con_key='Basic '+btoa(unescape(encodeURI(tw_token)+':'+encodeURI(tw_secret)));
+            /*console.log(con_key);
+            console.log('token '+tw_token);
+            console.log('secret '+tw_secret);
+            console.log('token url'+encodeURI(tw_token));
+            console.log('secret url'+encodeURI(tw_secret));
+            console.log('con key '+con_key);
+            console.log('con key '+btoa(unescape(encodeURIComponent(tw_token)+':'+encodeURIComponent(tw_secret))));
+          */
+            //var con_key=btoa(unescape(encodeURIComponent(tw_token)+':'+encodeURIComponent(tw_secret)))
+            $.ajax({
+                   url: 'https://api.twitter.com/oauth2/token?grant_type=client_credentials',
+                   type: 'post',
+                   headers: {
+                   "Authorization": con_key,
+                   "Content-Type":'application/x-www-form-urlencoded;charset=UTF-8'
+                   }
+                   })
+                   .complete(function( result ) {
+                            
+                         console.log(  result );
+                             if(result['statusText']=='OK'){
+                             //console.log(result['responseJSON']['access_token']);
+                             window.localStorage.setItem('bearer_token',result['responseJSON']['access_token']);
+                             post_image_twitter();
+                             }else {
+                             
+                             }
+                         });
+                  
+        }
+        
+        function check_bearer(){
+          //if(window.localStorage.getItem('bearer_token')==null)
+            post_twitter();
+         // else
+          //  post_image_twitter();
+        }
+        
+        function encodeImageUri(imageUri)
+        {
+            var c=document.createElement('canvas');
+            var ctx=c.getContext("2d");
+            var img=new Image();
+            img.onload = function(){
+                c.width=this.width;
+                c.height=this.height;
+                ctx.drawImage(img, 0,0);
+            };
+            img.src=imageUri;
+            var dataURL = c.toDataURL("image/jpeg");
+            return dataURL;
+        }
+
+        function toogle_share_fb(){
+            
+            if(share_fb){
+                console.log('fb...1');
+
+                $('#fb_share_icon').hide(0).attr('src','img/SNS/facebook-grey_L.png').show(0);
+                //document.getElementById('fb_share_icon').src='img/SNS/facebook-grey_L.png';
+                 $('#fb_share_name').css('color','#999');
+                 share_fb=0;
+            }else {
+                 console.log('fb...0');
+
+                 $('#fb_share_name').css('color','#000');
+                $('#fb_share_icon').hide(0).attr('src','img/SNS/facebook-blue_L.png').show(0);
+               // document.getElementById('fb_share_icon').src='img/SNS/facebook-blue_L.png';
+
+                share_fb=1;
+
+            }
+        }
+
+        function toogle_share_tw(){
+             if(share_tw){
+                                 console.log('tw...1');
+
+                $('#tw_share_icon').hide(0).attr('src','img/SNS/twitter-grey_L.png').show(0);
+                 $('#tw_share_name').css('color','#999');
+                 share_tw=0;
+            }else {
+                                 console.log('tw...0');
+
+                 $('#tw_share_name').css('color','#000');
+                $('#tw_share_icon').hide(0).attr('src','img/SNS/twitter-blue_L.png').show(0);
+
+                //share_tw=1;
+
+            }
+        }
+        function clear_and_back(){
+                         ActivityIndicator.hide();
+
+            window.localStorage.removeItem('selected_img');
+            window.localStorage.removeItem('recorded_voice');
+            
+            window.location='home.html';
+        }
+        </script>
+    </body>
+</html>

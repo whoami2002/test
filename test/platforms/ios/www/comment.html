@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+ 
+ http://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+ -->
+<html>
+    <head>
+        
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/comment.css" />
+        <link rel="stylesheet" type="text/css" href="css/layout.css" />
+        <title>Hello World</title>
+    </head>
+    <body>
+        <div >
+            <div class='status_bar'></div>
+            <div class='nav_bar'><div class='nav_left' > <img class="left_icon" src='img/arrow-left-72.png' onclick="back()"></div><div class='nav_title'>Comments</div>&nbsp</div></div>
+        
+        <!------------content area---------------->
+        <div id='view' class='view'  >
+            
+        </div>
+        <div id='comment_bar'>
+            <div style='float:left;height:50px;'><img id='my_icon' class='self_icon'></div>
+            <div style='float:left;margin-top:2.5px;'><input id='txt_comment' type='text' placeholder='Comment' class='txt_comment'></div>
+
+            <div style='float:left;margin-left:7.5px;margin-top:2px;'><button class='btn_send' style='text-align:center;padding:0;' onclick='post_comment()'>Send</button></div>
+<!--            <div style='clear:both'></div>-->
+        </div>
+
+
+        <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+        <script type="text/javascript" language="JavaScript">
+            //------------variables-------
+            var comment_array=[];
+            var accessToken='';
+            var device_id='F1BEAC93-C8DA-4B41-911B-3F5A30FB7274';
+            var device_type= 'ios';
+            var img_id='';
+            var user_array={};
+            //---------------------------
+
+            document.addEventListener("deviceready", onDeviceReady, true);
+
+            function onDeviceReady() {
+                 user_array= JSON.parse(window.localStorage.getItem('user'));
+                 $('#my_icon').attr('src',user_array['avatar']==null?'img/default-profile-pic_120.png':user_array['avatar']);
+                console.log(user_array);
+                accessToken=window.localStorage.getItem('accessToken');
+                img_id=getURLParameter('id');
+                get_list();
+             }
+
+            function load_comment(){
+                var comments="<div id='comments'>";
+                var count=comment_array.length;
+                var avatar_url='';
+                for(var i=0;i<count;i++){
+                    avatar_url=comment_array[i]['user']['avatar']==null?'img/default-profile-pic_120.png':comment_array[i]['user']['avatar'];
+                    comments+="<div class='comment'>";
+                        comments+="<div style='float:left'><img class='user_icon' src="+avatar_url+"></div>";
+                            comments+="<div class='comment_wrap'>";
+                                comments+="<div style='height:13px;padding-top:15px;width:100%;'>";
+                                    //User name of the comment
+                                    comments+="<div style='color:#404040;float:left;font-size:13px;height:13px;'>"+comment_array[i]['user']['name']+"</div>";
+                                    
+                                    //Time of the comment
+                                    comments+="<div style='color:#999999;float:right;font-size:12px;margin-right: 5px;height:13px;'>"+relative_time(comment_array[i]['createdAt'])+"</div>";
+                                comments+="</div>";
+                                //The comment words
+                                comments+="<div style='height:25px;padding-top:5px;width:100%;;font-size:16px;color:#404040;'> ";
+                                comments+=comment_array[i]['text'];
+                                comments+="</div>";
+                        comments+="</div>";
+                    comments+="</div>";
+                }
+                comments+="</div>";
+                //$('#view').html(comments);
+                document.getElementById('view').innerHTML=comments;
+            }
+        function addComment(){
+            var avatar_url=user_array['avatar']==null?'img/default-profile-pic_120.png':user_array['avatar'];
+            var comments="";
+                comments+="<div class='comment'>";
+                    comments+="<div style='float:left'><img class='user_icon' src="+avatar_url+"></div>";
+                        comments+="<div class='comment_wrap'>";
+                            comments+="<div style='height:13px;padding-top:15px;width:100%;'>";
+                                //User name of the comment
+                                comments+="<div style='color:#404040;float:left;font-size:13px;height:13px;'>"+user_array['name']+"</div>";
+                                
+                                //Time of the comment
+                                comments+="<div style='color:#999999;float:right;font-size:12px;margin-right: 5px;height:13px;'>Just now</div>";
+                            comments+="</div>";
+                            //The comment words
+                            comments+="<div style='height:25px;padding-top:5px;width:100%;;font-size:16px;color:#404040;'> ";
+                            comments+=$('#txt_comment').val();
+                            comments+="</div>";
+                    comments+="</div>";
+                comments+="</div>";
+                //$('#view').html(comments);
+                document.getElementById('comments').innerHTML+=comments;
+                            $('#view').scrollTop($('#view').height());
+
+        }
+        
+
+
+
+        function back(){
+            window.history.back();
+        }
+        
+        function getURLParameter(name) {
+            return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
+        }
+        function get_list(){
+
+            $.get( "http://selfie.gutschat.com/api/comment/list",
+                  {
+                  photo_id:img_id,
+                  device_type: device_type,
+                  device_id:device_id,
+                  access_token:accessToken
+                  
+                  },function(result){
+                  if(result&&result['pagination']){
+                    page_array=result['pagination'];
+
+                    comment_array=result['data'].reverse();
+                  
+                  //--------------display the list-----------------
+                  load_comment();
+                  }else {
+                   //navigator.notification.alert('Invalid Email', null, "");
+                  
+                  }
+                  
+                  /*if(result['success']){
+                   console.log('success');
+                   
+                   }else{
+                   navigator.notification.alert('The verification code is incorrect or expired. Please try again.', null, "");
+                   }*/
+                  }
+                  
+                  )
+                  .fail( function(xhr, textStatus, errorThrown) {
+                        console.log(xhr.responseText, null, "");
+                       // navigator.notification.alert('fail to connection server.', null, "");
+                        });
+                        
+        }
+
+
+        function post_comment(){
+
+                                  
+            if($.trim($('#txt_comment').val())==''){
+                navigator.notification.alert('Comment cannot be empty.', null, "");
+
+            }else {
+                ActivityIndicator.show('Loading');
+
+                $.post( "http://selfie.gutschat.com/api/comment/create",
+                  {
+                  photo_id:img_id,
+                  text:$('#txt_comment').val(),
+                  device_type: device_type,
+                  device_id:device_id,
+                  access_token:accessToken
+                  
+                  },function(result){
+                    ActivityIndicator.hide();
+
+                    console.log(result);
+                  if(result&&result['id']){
+                    addComment();
+                  
+                  }else {
+                   //navigator.notification.alert('Fail to add comment', null, "");
+                  
+                  }
+                  
+                  /*if(result['success']){
+                   console.log('success');
+                   
+                   }else{
+                   navigator.notification.alert('The verification code is incorrect or expired. Please try again.', null, "");
+                   }*/
+                  }
+                  
+                  )
+                  .fail( function(xhr, textStatus, errorThrown) {
+                        console.log(xhr.responseText, null, "");
+                       // navigator.notification.alert('fail to connection server.', null, "");
+                        });
+            }
+            
+                        
+        }
+        function relative_time(time){
+            var datetime = new Date();
+            var cur_sec=datetime.getTime()/1000;
+            var difference = cur_sec - time;
+            
+            // Customize in your own language.
+            var periods = [ "sec", "min", "hour", "day", "week", "month", "year"];
+            var lengths = [ "60","60","24","7","4.35","12"];
+            var ending='';
+            if (difference > 0) { // this was in the past
+                ending = "ago";
+            }else {
+                return 'Just now';
+            }
+            for( var j=0; difference>=lengths[j] && j < 6; j++ )
+            difference /= lengths[j];
+            difference = Math.floor(difference);
+            if( difference != 1 ){
+                // Also change this if needed for an other language
+                periods[j]+= "s";
+            }
+            if(periods[j]=="sec"||periods[j]=="secs")
+            return 'Just now';
+            
+            var text = difference+' '+periods[j]+ ' '+ending;
+            return text;
+        }
+        </script>
+    </body>
+</html>
